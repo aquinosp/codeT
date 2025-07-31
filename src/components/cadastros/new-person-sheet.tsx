@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
 
 const personSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -31,6 +32,7 @@ const personSchema = z.object({
 
 export function NewPersonSheet() {
   const { toast } = useToast()
+  const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<z.infer<typeof personSchema>>({
     resolver: zodResolver(personSchema),
@@ -47,12 +49,13 @@ export function NewPersonSheet() {
     console.log(values)
     toast({ title: "Pessoa Salva", description: `A pessoa ${values.name} foi salva com sucesso.` })
     form.reset()
+    setIsOpen(false);
   }
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button><Plus className="-ml-1 h-4 w-4" /> Nova Pessoa</Button>
+        <Button onClick={() => setIsOpen(true)}><Plus className="-ml-1 h-4 w-4" /> Nova Pessoa</Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-lg w-full flex flex-col">
         <SheetHeader>
@@ -111,14 +114,14 @@ export function NewPersonSheet() {
                 <FormMessage />
               </FormItem>
             )} />
+             <SheetFooter className="mt-auto pt-4">
+                <SheetClose asChild>
+                    <Button variant="outline">Cancelar</Button>
+                </SheetClose>
+                <Button type="submit">Salvar</Button>
+            </SheetFooter>
           </form>
         </Form>
-        <SheetFooter className="mt-auto pt-4">
-          <SheetClose asChild>
-            <Button variant="outline">Cancelar</Button>
-          </SheetClose>
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>Salvar</Button>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   )
