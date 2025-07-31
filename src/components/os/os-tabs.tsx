@@ -12,10 +12,10 @@ export default function OsTabs() {
         </h1>
         <NewOsSheet />
       </div>
-      <Tabs defaultValue="kanban" className="flex-1 flex flex-col">
+      <Tabs defaultValue="lista" className="flex-1 flex flex-col">
         <TabsList className="grid w-full grid-cols-2 md:w-80">
-          <TabsTrigger value="kanban">Kanban</TabsTrigger>
           <TabsTrigger value="lista">Lista</TabsTrigger>
+          <TabsTrigger value="kanban">Kanban</TabsTrigger>
         </TabsList>
         <TabsContent value="kanban" className="flex-1 mt-4">
           <OsKanbanBoard />
