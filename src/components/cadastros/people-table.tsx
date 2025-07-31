@@ -11,6 +11,20 @@ import {
 import { mockPeople } from "@/lib/data"
 import { Badge } from "../ui/badge"
 import { NewPersonSheet } from "./new-person-sheet"
+import { Person } from "@/lib/types"
+
+const getBadgeVariant = (type: Person['type']) => {
+  switch (type) {
+    case 'Cliente':
+      return 'secondary'
+    case 'Fornecedor':
+      return 'outline'
+    case 'Funcionário':
+      return 'default'
+    default:
+      return 'default'
+  }
+}
 
 export function PeopleTable() {
   return (
@@ -37,7 +51,7 @@ export function PeopleTable() {
                 <TableCell>{person.email}</TableCell>
                 <TableCell>{person.cpfCnpj}</TableCell>
                 <TableCell>
-                    <Badge variant={person.type === 'Cliente' ? 'secondary' : 'outline'}>{person.type}</Badge>
+                    <Badge variant={getBadgeVariant(person.type)}>{person.type}</Badge>
                 </TableCell>
               </TableRow>
             ))}

@@ -6,6 +6,7 @@ export const mockPeople: Person[] = [
   { id: '3', name: 'Fornecedor de Peças SA', phone: '(41) 3333-4444', email: 'contato@pecas.com', cpfCnpj: '12.345.678/0001-99', type: 'Fornecedor' },
   { id: '4', name: 'Pedro Souza', phone: '(51) 99999-8888', email: 'pedro.souza@example.com', cpfCnpj: '111.222.333-44', type: 'Cliente' },
   { id: '5', name: 'Distribuidora de Óleos Ltda', phone: '(31) 2222-1111', email: 'vendas@oleos.com', cpfCnpj: '87.654.321/0001-00', type: 'Fornecedor' },
+  { id: '6', name: 'Técnico Padrão', phone: '(11) 99999-9999', email: 'tecnico@erptao.com', cpfCnpj: '111.111.111-11', type: 'Funcionário' },
 ];
 
 export const mockProducts: Product[] = [

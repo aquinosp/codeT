@@ -26,7 +26,7 @@ const personSchema = z.object({
   phone: z.string().min(1, "Telefone é obrigatório"),
   email: z.string().email("Email inválido").optional().or(z.literal('')),
   cpfCnpj: z.string().min(1, "CPF/CNPJ é obrigatório"),
-  type: z.enum(["Cliente", "Fornecedor"], { required_error: "Tipo é obrigatório" }),
+  type: z.enum(["Cliente", "Fornecedor", "Funcionário"], { required_error: "Tipo é obrigatório" }),
 })
 
 export function NewPersonSheet() {
@@ -53,7 +53,7 @@ export function NewPersonSheet() {
         <SheetHeader>
           <SheetTitle className="font-headline">Nova Pessoa</SheetTitle>
           <SheetDescription>
-            Adicione um novo cliente ou fornecedor.
+            Adicione um novo cliente, fornecedor ou funcionário.
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
@@ -100,6 +100,7 @@ export function NewPersonSheet() {
                     <SelectContent>
                       <SelectItem value="Cliente">Cliente</SelectItem>
                       <SelectItem value="Fornecedor">Fornecedor</SelectItem>
+                      <SelectItem value="Funcionário">Funcionário</SelectItem>
                     </SelectContent>
                   </Select>
                 <FormMessage />

@@ -4,7 +4,7 @@ export type Person = {
   phone: string;
   email: string;
   cpfCnpj: string;
-  type: 'Cliente' | 'Fornecedor';
+  type: 'Cliente' | 'Fornecedor' | 'Funcionário';
 };
 
 export type Product = {
