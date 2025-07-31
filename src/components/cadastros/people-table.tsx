@@ -8,18 +8,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
 import { mockPeople } from "@/lib/data"
 import { Badge } from "../ui/badge"
+import { NewPersonSheet } from "./new-person-sheet"
 
 export function PeopleTable() {
   return (
     <div className="space-y-4">
         <div className="flex items-center justify-end">
-            <Button>
-                <Plus className="-ml-1 h-4 w-4" /> Nova Pessoa
-            </Button>
+            <NewPersonSheet />
         </div>
       <div className="rounded-lg border">
         <Table>
