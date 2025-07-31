@@ -13,21 +13,18 @@ import {
 import NavMenu from '@/components/nav-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Bike, LogOut, Settings, Bell, Search } from 'lucide-react';
+import { Menu, LogOut, Settings, Bell, Search } from 'lucide-react';
 import { Input } from './ui/input';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-background">
-        <Sidebar collapsible="icon">
-          <SidebarRail />
+        <Sidebar side="left" collapsible="icon" variant="sidebar">
           <SidebarHeader>
-            <div className="flex items-center gap-3 p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <Bike className="h-6 w-6" />
-              </div>
+            <div className="flex items-center gap-3 p-4">
               <h1 className="font-semibold text-xl text-sidebar-foreground group-data-[collapsible=icon]:hidden">ERP TAO</h1>
+               <SidebarTrigger className="ml-auto group-data-[collapsible=icon]:hidden" />
             </div>
           </SidebarHeader>
           <SidebarContent>

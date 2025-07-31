@@ -26,7 +26,9 @@ export default function NavMenu() {
                 isActive={pathname === item.href}
                 className={cn(
                   "justify-start text-base font-normal h-12",
-                  pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground",
+                  pathname === item.href 
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "hover:bg-sidebar-accent/50",
                   "group-data-[collapsible=icon]:justify-center"
                 )}
                 tooltip={{content: item.label, side: "right", align: "center"}}

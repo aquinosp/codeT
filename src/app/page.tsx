@@ -2,7 +2,7 @@
 
 import type { ComponentProps } from "react"
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer } from "recharts"
-import { BarChart as BarChartIcon, DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
+import { DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
 
 import {
   Card,
@@ -18,7 +18,6 @@ import {
   ChartLegendContent,
 } from "@/components/ui/chart"
 import AppShell from "@/components/app-shell"
-import { Badge } from "@/components/ui/badge"
 
 const osData = [
   { status: "Concluído", count: 25, fill: "var(--color-chart-1)" },
@@ -55,7 +54,7 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <div className="flex flex-col gap-6 p-4 sm:p-6 md:p-8">
-        <h1 className="text-2xl font-semibold text-foreground">
+        <h1 className="text-3xl font-bold text-foreground">
           Dashboard
         </h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
