@@ -25,7 +25,7 @@ const personSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   phone: z.string().min(1, "Telefone é obrigatório"),
   email: z.string().email("Email inválido").optional().or(z.literal('')),
-  cpfCnpj: z.string().min(1, "CPF/CNPJ é obrigatório"),
+  cpfCnpj: z.string().optional().or(z.literal('')),
   type: z.enum(["Cliente", "Fornecedor", "Funcionário"], { required_error: "Tipo é obrigatório" }),
 })
 
@@ -36,12 +36,17 @@ export function NewPersonSheet() {
     resolver: zodResolver(personSchema),
     defaultValues: {
       type: "Cliente",
+      name: "",
+      phone: "",
+      email: "",
+      cpfCnpj: "",
     },
   })
 
   function onSubmit(values: z.infer<typeof personSchema>) {
     console.log(values)
     toast({ title: "Pessoa Salva", description: `A pessoa ${values.name} foi salva com sucesso.` })
+    form.reset()
   }
 
   return (
@@ -67,7 +72,7 @@ export function NewPersonSheet() {
               )} />
                <FormField name="cpfCnpj" control={form.control} render={({ field }) => (
                 <FormItem>
-                  <FormLabel>CPF/CNPJ</FormLabel>
+                  <FormLabel>CPF/CNPJ (Opcional)</FormLabel>
                   <FormControl><Input placeholder="Ex: 123.456.789-00" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -82,7 +87,7 @@ export function NewPersonSheet() {
               )} />
               <FormField name="email" control={form.control} render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email (Opcional)</FormLabel>
                   <FormControl><Input placeholder="contato@exemplo.com" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
