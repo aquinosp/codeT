@@ -7,10 +7,10 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui
 import { cn } from '@/lib/utils';
 
 const menuItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/os', label: 'Ordens de Serviço', icon: Wrench },
   { href: '/compras', label: 'Compras', icon: ShoppingCart },
   { href: '/cadastros', label: 'Cadastros', icon: ClipboardList },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
 ];
 
 export default function NavMenu() {
