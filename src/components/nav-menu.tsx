@@ -21,22 +21,23 @@ export default function NavMenu() {
       <SidebarMenu>
         {menuItems.map((item) => (
           <SidebarMenuItem key={item.href}>
-            <Link href={item.href} passHref legacyBehavior>
-              <SidebarMenuButton
-                isActive={pathname === item.href}
-                className={cn(
-                  "justify-start text-base font-normal h-12",
-                  pathname === item.href 
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "hover:bg-sidebar-accent/50",
-                  "group-data-[collapsible=icon]:justify-center"
-                )}
-                tooltip={{content: item.label, side: "right", align: "center"}}
-              >
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === item.href}
+              className={cn(
+                "justify-start text-base font-normal h-12",
+                pathname === item.href 
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "hover:bg-sidebar-accent/50",
+                "group-data-[collapsible=icon]:justify-center"
+              )}
+              tooltip={{content: item.label, side: "right", align: "center"}}
+            >
+              <Link href={item.href}>
                 <item.icon className="h-5 w-5" />
                 <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-              </SidebarMenuButton>
-            </Link>
+              </Link>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
