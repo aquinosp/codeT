@@ -69,7 +69,7 @@ export function OsKanbanBoard() {
     setDraggedOrder(null);
     const order = orders.find(o => o.id === orderId);
     
-    if (order && newStatus === 'Concluído') {
+    if (order && newStatus === 'Concluído' && order.status !== 'Concluído') {
         setPaymentOrder(order);
     } else if (order) {
         setOrders(prevOrders =>
@@ -93,11 +93,11 @@ export function OsKanbanBoard() {
       {columns.map(status => (
         <div
           key={status}
-          className="rounded-lg bg-secondary p-4 flex flex-col gap-4"
+          className="rounded-lg bg-secondary/50 p-4 flex flex-col gap-4"
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, status)}
         >
-          <h2 className="font-headline text-lg font-semibold">{columnTitles[status]}</h2>
+          <h2 className="text-lg font-semibold">{columnTitles[status]}</h2>
           <div className="flex-1 space-y-4">
             {orders
               .filter(order => order.status === status)
@@ -119,7 +119,7 @@ export function OsKanbanBoard() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <NewOsSheet isEditing order={order} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
-                        <DropdownMenuItem onClick={() => setPaymentOrder(order)}>Concluir</DropdownMenuItem>
+                        {order.status !== 'Concluído' && <DropdownMenuItem onClick={() => setPaymentOrder(order)}>Concluir</DropdownMenuItem>}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </CardHeader>

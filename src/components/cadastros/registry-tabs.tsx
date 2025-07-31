@@ -5,7 +5,7 @@ import { ProductsTable } from "./products-table"
 export function RegistryTabs() {
   return (
     <Tabs defaultValue="people" className="flex-1 flex flex-col">
-      <TabsList className="grid w-full grid-cols-2 md:w-96">
+      <TabsList className="grid w-full grid-cols-2 md:w-80">
         <TabsTrigger value="people">Pessoas</TabsTrigger>
         <TabsTrigger value="products">Produtos</TabsTrigger>
       </TabsList>

@@ -31,7 +31,7 @@ export function ProductsTable() {
           <TableBody>
             {mockProducts.map((product) => (
               <TableRow key={product.id}>
-                <TableCell className="font-mono text-sm">{product.code}</TableCell>
+                <TableCell className="font-mono text-xs">{product.code}</TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>
                   {product.sellPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -39,7 +39,7 @@ export function ProductsTable() {
                 <TableCell>
                     <div className="flex items-center gap-2">
                         <span>{product.stock} / {product.minStock * 5}</span>
-                        <Progress value={(product.stock / (product.minStock * 5)) * 100} className="w-24" />
+                        <Progress value={(product.stock / (product.minStock * 5)) * 100} className="w-24 h-2" />
                     </div>
                 </TableCell>
               </TableRow>

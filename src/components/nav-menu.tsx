@@ -17,7 +17,7 @@ export default function NavMenu() {
   const pathname = usePathname();
 
   return (
-    <div className="flex w-full flex-col gap-2 p-2">
+    <div className="flex w-full flex-col gap-0 p-2">
       <SidebarMenu>
         {menuItems.map((item) => (
           <SidebarMenuItem key={item.href}>
@@ -25,13 +25,14 @@ export default function NavMenu() {
               <SidebarMenuButton
                 isActive={pathname === item.href}
                 className={cn(
-                  "justify-start",
-                  pathname === item.href && "bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
+                  "justify-start text-base font-normal h-12",
+                  pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground",
+                  "group-data-[collapsible=icon]:justify-center"
                 )}
-                tooltip={item.label}
+                tooltip={{content: item.label, side: "right", align: "center"}}
               >
                 <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
+                <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
