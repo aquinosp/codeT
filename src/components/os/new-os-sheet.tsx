@@ -22,7 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { mockPeople, mockProducts } from "@/lib/data"
 import type { ServiceOrder } from "@/lib/types"
-import React from "react"
+import React, { useEffect } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 
@@ -71,6 +71,13 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     control: form.control,
     name: "items"
   })
+
+  useEffect(() => {
+    if (!isEditing && fields.length === 0) {
+      append({ productId: "", description: "", unitPrice: 0, quantity: 1 });
+    }
+  }, [isEditing, fields, append]);
+
 
   const watchedItems = useWatch({
     control: form.control,
@@ -298,5 +305,3 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     </Sheet>
   )
 }
-
-    
