@@ -52,7 +52,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                  <SidebarTrigger className="md:hidden" />
                  <div className="relative hidden md:block">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Looking for something..." className="pl-8 w-64" />
+                    <Input placeholder="Procurando por algo..." className="pl-8 w-64" />
                  </div>
             </div>
             <div className='flex items-center gap-2'>

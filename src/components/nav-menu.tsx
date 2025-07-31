@@ -29,7 +29,7 @@ export default function NavMenu() {
                 pathname === item.href 
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : "hover:bg-sidebar-accent/50",
-                "group-data-[collapsible=icon]:justify-center"
+                "group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:justify-center"
               )}
               tooltip={{content: item.label, side: "right", align: "center"}}
             >

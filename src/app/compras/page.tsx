@@ -10,7 +10,9 @@ export default function ComprasPage() {
             Gestão de Compras
           </h1>
         </div>
-        <PurchasesTable />
+        <div className="flex-1 overflow-x-auto">
+          <PurchasesTable />
+        </div>
       </div>
     </AppShell>
   );
