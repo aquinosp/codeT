@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster"
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Tao Control',
+  title: 'ERP TAO',
   description: 'ERP para oficina mecânica Tao Bikes',
 };
 

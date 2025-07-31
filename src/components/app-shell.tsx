@@ -27,7 +27,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <Bike className="h-6 w-6" />
               </div>
-              <h1 className="font-semibold text-xl text-sidebar-foreground group-data-[collapsible=icon]:hidden">Tao Control</h1>
+              <h1 className="font-semibold text-xl text-sidebar-foreground group-data-[collapsible=icon]:hidden">ERP TAO</h1>
             </div>
           </SidebarHeader>
           <SidebarContent>
