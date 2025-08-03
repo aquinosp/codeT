@@ -64,11 +64,11 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
             }
             
             const header = Object.keys(json[0]);
-            const missingHeaderFields = fields.filter(f => !header.includes(f));
-            if (missingHeaderFields.length > 0) {
+            const missingRequiredFields = requiredFields.filter(f => !header.includes(f));
+            if (missingRequiredFields.length > 0) {
                  toast({
                     title: "Erro no Cabeçalho",
-                    description: `As seguintes colunas estão faltando no arquivo: ${missingHeaderFields.join(',')}. O cabeçalho esperado é: ${fields.join(',')}`,
+                    description: `As seguintes colunas obrigatórias estão faltando: ${missingRequiredFields.join(',')}.`,
                     variant: "destructive"
                 });
                 setIsImporting(false);
@@ -91,8 +91,10 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
 
                 const docData: { [key: string]: any } = {};
 
-                fields.forEach(field => {
-                    docData[field] = row[field] ?? '';
+                header.forEach(field => {
+                    if (fields.includes(field)) {
+                        docData[field] = row[field] ?? '';
+                    }
                 });
 
                 const missingFields = requiredFields.filter(f => !docData[f] && docData[f] !== 0);
