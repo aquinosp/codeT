@@ -38,7 +38,6 @@ const osSchema = z.object({
   description: z.string(),
   items: z.array(z.object({
     productId: z.string().min(1, "Selecione um item"),
-    description: z.string(),
     unitPrice: z.coerce.number(),
     quantity: z.coerce.number().min(1, "Min. 1"),
   })).min(1, "Adicione pelo menos um item"),
@@ -65,7 +64,6 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
       description: order?.description,
       items: order?.items.map(i => ({ 
         productId: i.product.id,
-        description: i.product.description,
         unitPrice: i.unitPrice,
         quantity: i.quantity 
       }))
@@ -101,7 +99,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     if (isOpen) {
       fetchNewOsNumber();
       if (!isEditing && fields.length === 0) {
-        append({ productId: "", description: "", unitPrice: 0, quantity: 1 });
+        append({ productId: "", unitPrice: 0, quantity: 1 });
       }
     }
   }, [isOpen, isEditing, fields.length, append, form]);
@@ -137,7 +135,6 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
   const handleProductChange = (productId: string, index: number) => {
     const product = products.find(p => p.id === productId);
     if (product) {
-      form.setValue(`items.${index}.description`, product.description);
       form.setValue(`items.${index}.unitPrice`, product.sellPrice);
     }
   }
@@ -278,16 +275,19 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
             <div className="space-y-2">
               <Label className="text-base font-medium">Itens do Serviço</Label>
                {fields.length > 0 && (
-                <div className="grid grid-cols-[1fr,1fr,120px,80px,auto] gap-2 text-sm font-medium text-muted-foreground px-1">
+                <div className="grid grid-cols-[2fr,80px,120px,120px,auto] gap-2 text-sm font-medium text-muted-foreground px-1">
                   <span>Item</span>
-                  <span>Descrição</span>
-                  <span>Preço Unit.</span>
                   <span>Qtd.</span>
+                  <span>Preço Unit.</span>
+                  <span>Preço Total</span>
                 </div>
               )}
               <div className="space-y-2">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-[1fr,1fr,120px,80px,auto] gap-2 items-start">
+                {fields.map((field, index) => {
+                  const item = watchedItems[index]
+                  const total = (item.quantity || 0) * (item.unitPrice || 0)
+                  return (
+                  <div key={field.id} className="grid grid-cols-[2fr,80px,120px,120px,auto] gap-2 items-start">
                     <FormField
                       control={form.control}
                       name={`items.${index}.productId`}
@@ -308,8 +308,6 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
                         </FormItem>
                       )}
                     />
-                    <FormField control={form.control} name={`items.${index}.description`} render={({ field }) => ( <FormItem><FormControl><Input {...field} placeholder="Descrição do produto/serviço" disabled /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name={`items.${index}.unitPrice`} render={({ field }) => ( <FormItem><FormControl><Input type="number" {...field} placeholder="0" disabled /></FormControl><FormMessage /></FormItem> )} />
                      <FormField
                       control={form.control}
                       name={`items.${index}.quantity`}
@@ -322,12 +320,20 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
                         </FormItem>
                       )}
                     />
+                    <FormField control={form.control} name={`items.${index}.unitPrice`} render={({ field }) => ( <FormItem><FormControl><Input type="number" {...field} placeholder="0" disabled /></FormControl><FormMessage /></FormItem> )} />
+                    
+                    <FormItem>
+                        <FormControl>
+                            <Input type="number" value={total.toFixed(2)} placeholder="0" disabled />
+                        </FormControl>
+                    </FormItem>
+
                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   </div>
-                ))}
-                 <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => append({ productId: "", description: "", unitPrice: 0, quantity: 1 })}>
+                )})}
+                 <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => append({ productId: "", unitPrice: 0, quantity: 1 })}>
                     <Plus className="mr-2 h-4 w-4" />
                     Adicionar Item
                 </Button>
@@ -382,5 +388,3 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     </Sheet>
   )
 }
-
-    
