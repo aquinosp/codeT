@@ -14,11 +14,12 @@ export type Product = {
   code: string;
   name:string;
   description: string;
+  type: 'Produto' | 'Serviço';
   costPrice: number;
   sellPrice: number;
-  stock: number;
-  minStock: number;
-  unit: 'un' | 'kg' | 'L' | 'm';
+  stock?: number;
+  minStock?: number;
+  unit?: 'un' | 'kg' | 'L' | 'm';
 };
 
 export type ServiceOrderItem = {

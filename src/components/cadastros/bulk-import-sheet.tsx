@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Upload } from "lucide-react"
-import { addDoc, collection, writeBatch } from "firebase/firestore"
+import { doc, collection, writeBatch } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 import {
@@ -35,8 +35,8 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
   const [csvData, setCsvData] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
-  const title = collectionName === 'people' ? 'Importar Pessoas' : 'Importar Produtos';
-  const description = collectionName === 'people' ? 'Cole os dados das pessoas no formato CSV.' : 'Cole os dados dos produtos no formato CSV.';
+  const title = collectionName === 'people' ? 'Importar Pessoas' : 'Importar Produtos/Serviços';
+  const description = collectionName === 'people' ? 'Cole os dados das pessoas no formato CSV.' : 'Cole os dados dos produtos e serviços no formato CSV.';
 
 
   const handleImport = async () => {
@@ -59,6 +59,7 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
     const errorMessages: string[] = [];
 
     lines.forEach((line, index) => {
+        if (errorCount > 5) return; // Stop processing if too many errors
         const values = line.trim().split(',');
         const docData: { [key: string]: any } = {};
 
@@ -75,13 +76,17 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
         }
 
         for (const field of numericFields) {
+            // Allow empty numeric fields if they are not required
             if (docData[field] && isNaN(Number(docData[field]))) {
                  errorCount++;
                  errorMessages.push(`Linha ${index + 2}: Campo ${field} deve ser um número.`);
                  return;
             }
-            if (docData[field]) {
+             if (docData[field]) {
                  docData[field] = Number(docData[field]);
+            } else {
+                // If field is empty but not required, don't set it (or set to null)
+                delete docData[field];
             }
         }
         
@@ -92,6 +97,21 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
                 return;
             }
         }
+        
+        // Special validation for products vs services
+        if (collectionName === 'products') {
+            if (docData.type === 'Produto' && (!docData.stock || !docData.unit)) {
+                errorCount++;
+                errorMessages.push(`Linha ${index + 2}: Estoque e Unidade são obrigatórios para 'Produto'`);
+                return;
+            }
+            if(docData.type === 'Serviço') {
+                delete docData.stock;
+                delete docData.minStock;
+                delete docData.unit;
+            }
+        }
+
 
         const docRef = doc(collection(db, collectionName));
         batch.set(docRef, docData);
@@ -140,7 +160,7 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
         <div className="flex-1 flex flex-col gap-4 py-4">
            <Alert>
               <AlertTitle>Formato Esperado</AlertTitle>
-              <AlertDescription className="text-xs font-mono bg-muted p-2 rounded-md">
+              <AlertDescription className="text-xs font-mono bg-muted p-2 rounded-md whitespace-pre-wrap">
                 {fields.join(',')}
               </AlertDescription>
            </Alert>
