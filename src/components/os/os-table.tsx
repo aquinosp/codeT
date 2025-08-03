@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MoreHorizontal, Timer } from "lucide-react"
+import { MoreHorizontal, Timer, Printer } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -160,6 +160,7 @@ export function OsTable() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Ações</DropdownMenuLabel>
                       <NewOsSheet isEditing order={order} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                      <DropdownMenuItem onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleComplete(order)}>Concluir</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
