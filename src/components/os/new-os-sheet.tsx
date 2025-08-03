@@ -112,7 +112,8 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     const unsubPeople = onSnapshot(q, (snapshot) => {
       setPeople(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person)));
     });
-    const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
+    const qProducts = query(collection(db, "products"), orderBy("name", "asc"));
+    const unsubProducts = onSnapshot(qProducts, (snapshot) => {
       setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
     });
     return () => {
@@ -196,6 +197,8 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     .filter(p => p.type === 'Cliente')
     .map(p => ({ value: p.id, label: p.name }));
 
+  const productOptions = products.map(p => ({ value: p.id, label: `${p.code || 'S/C'} - ${p.name}` }));
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild onClick={() => setIsOpen(true)}>
@@ -273,7 +276,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
               <Label className="text-base font-medium">Itens do Serviço</Label>
                {fields.length > 0 && (
                 <div className="grid grid-cols-[1fr,1fr,120px,80px,auto] gap-2 text-sm font-medium text-muted-foreground px-1">
-                  <span>Código</span>
+                  <span>Item</span>
                   <span>Descrição</span>
                   <span>Preço Unit.</span>
                   <span>Qtd.</span>
@@ -287,21 +290,17 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
                       name={`items.${index}.productId`}
                       render={({ field }) => (
                         <FormItem>
-                          <Select onValueChange={(value) => {
-                            field.onChange(value)
-                            handleProductChange(value, index)
-                          }} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {products.map(p => (
-                                <SelectItem key={p.id} value={p.id}>{p.code}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                           <Combobox
+                                options={productOptions}
+                                value={field.value}
+                                onChange={(value) => {
+                                    field.onChange(value)
+                                    handleProductChange(value, index)
+                                }}
+                                placeholder="Selecione um item"
+                                searchPlaceholder="Pesquisar item..."
+                                notFoundText="Nenhum item encontrado."
+                            />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -380,3 +379,5 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     </Sheet>
   )
 }
+
+    

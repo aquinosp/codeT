@@ -18,14 +18,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { PopoverAnchor } from "@radix-ui/react-popover"
 
 interface ComboboxProps {
     options: { label: string; value: string }[];
-    value: string;
+    value?: string;
     onChange: (value: string) => void;
     placeholder?: string;
     searchPlaceholder?: string;
     notFoundText?: string;
+    className?: string;
 }
 
 export function Combobox({ 
@@ -34,13 +36,14 @@ export function Combobox({
     onChange,
     placeholder = "Select option...",
     searchPlaceholder = "Search...",
-    notFoundText = "No option found."
+    notFoundText = "No option found.",
+    className
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild className={className}>
         <Button
           variant="outline"
           role="combobox"
@@ -53,8 +56,16 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
-        <Command>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+        <Command
+          filter={(value, search) => {
+            const option = options.find(o => o.value === value);
+            if(option) {
+              return option.label.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+            }
+            return 0;
+          }}
+        >
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
             <CommandEmpty>{notFoundText}</CommandEmpty>
@@ -64,7 +75,8 @@ export function Combobox({
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
+                    const realValue = options.find(o => o.value.toLowerCase() === currentValue.toLowerCase())?.value;
+                    onChange(realValue === value ? "" : realValue || "")
                     setOpen(false)
                   }}
                 >
@@ -84,3 +96,5 @@ export function Combobox({
     </Popover>
   )
 }
+
+    
