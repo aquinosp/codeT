@@ -43,12 +43,14 @@ function SlaTimer({ date }: { date: Date }) {
   const [time, setTime] = useState("")
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const updateTimer = () => {
       const diff = new Date().getTime() - date.getTime();
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       setTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
-    }, 1000);
+    }
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   },[date])
 
@@ -67,20 +69,30 @@ export function OsTable() {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "serviceOrders"), async (snapshot) => {
-      const ordersData = await Promise.all(snapshot.docs.map(async (d) => {
+      const ordersDataPromises = snapshot.docs.map(async (d) => {
         const orderData = d.data() as ServiceOrderDocument;
+
+        if (!orderData.customerId) {
+          return null;
+        }
         
         const customerDoc = await getDoc(doc(db, "people", orderData.customerId));
+        if (!customerDoc.exists()) {
+          return null;
+        }
         const customer = { id: customerDoc.id, ...customerDoc.data() };
 
-        const items = await Promise.all(orderData.items.map(async (item) => {
+        const itemsPromises = (orderData.items || []).map(async (item) => {
+          if (!item.productId) return null;
           const productDoc = await getDoc(doc(db, "products", item.productId));
+          if (!productDoc.exists()) return null;
           return {
             id: productDoc.id,
             product: { id: productDoc.id, ...productDoc.data() },
             ...item
           };
-        }));
+        });
+        const items = (await Promise.all(itemsPromises)).filter(Boolean) as ServiceOrder['items'];
 
         return {
           id: d.id,
@@ -89,7 +101,8 @@ export function OsTable() {
           items,
           createdAt: orderData.createdAt.toDate(),
         } as ServiceOrder;
-      }));
+      });
+      const ordersData = (await Promise.all(ordersDataPromises)).filter(Boolean) as ServiceOrder[];
       setOrders(ordersData);
     });
 
