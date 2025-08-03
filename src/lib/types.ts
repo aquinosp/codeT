@@ -14,6 +14,7 @@ export type Product = {
   code: string;
   name:string;
   description: string;
+  barcode?: string;
   type: 'Produto' | 'Serviço';
   costPrice: number;
   sellPrice: number;

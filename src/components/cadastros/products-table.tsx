@@ -34,7 +34,7 @@ export function ProductsTable() {
         <div className="flex items-center justify-end gap-2">
             <BulkImportSheet
               collectionName="products"
-              fields={['code', 'name', 'description', 'type', 'costPrice', 'sellPrice', 'stock', 'minStock', 'unit']}
+              fields={['code', 'name', 'description', 'barcode', 'type', 'costPrice', 'sellPrice', 'stock', 'minStock', 'unit']}
               requiredFields={['code', 'name', 'type', 'costPrice', 'sellPrice']}
               numericFields={['costPrice', 'sellPrice', 'stock', 'minStock']}
               enumFields={{ 

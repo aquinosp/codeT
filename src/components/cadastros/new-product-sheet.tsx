@@ -30,6 +30,7 @@ const productSchema = z.object({
   code: z.string().min(1, "Código é obrigatório"),
   name: z.string().min(1, "Nome é obrigatório"),
   description: z.string(),
+  barcode: z.string().optional(),
   type: z.enum(["Produto", "Serviço"], { required_error: "Tipo é obrigatório" }),
   costPrice: z.coerce.number().positive("Deve ser um número positivo"),
   sellPrice: z.coerce.number().positive("Deve ser um número positivo"),
@@ -74,6 +75,7 @@ export function NewProductSheet() {
       code: "",
       name: "",
       description: "",
+      barcode: "",
       costPrice: undefined,
       sellPrice: undefined,
       stock: undefined,
@@ -164,6 +166,14 @@ export function NewProductSheet() {
                 </FormItem>
               )} />
             </div>
+
+            <FormField name="barcode" control={form.control} render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Código de Barras (Opcional)</FormLabel>
+                  <FormControl><Input placeholder="Ex: 7891234567890" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
             <FormField name="description" control={form.control} render={({ field }) => (
               <FormItem>
