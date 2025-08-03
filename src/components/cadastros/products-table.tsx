@@ -10,12 +10,11 @@ import {
 } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
 import { NewProductSheet } from "./new-product-sheet"
-import { Button } from "../ui/button"
-import { Upload } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { Product } from "@/lib/types"
 import { collection, onSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { BulkImportSheet } from "./bulk-import-sheet"
 
 export function ProductsTable() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -31,10 +30,13 @@ export function ProductsTable() {
   return (
     <div className="space-y-4">
         <div className="flex items-center justify-end gap-2">
-            <Button variant="outline">
-                <Upload className="-ml-1 h-4 w-4" />
-                Importar em massa
-            </Button>
+            <BulkImportSheet
+              collectionName="products"
+              fields={['code', 'name', 'description', 'costPrice', 'sellPrice', 'stock', 'minStock', 'unit']}
+              requiredFields={['code', 'name', 'sellPrice', 'stock']}
+              numericFields={['costPrice', 'sellPrice', 'stock', 'minStock']}
+              enumFields={{ 'unit': ['un', 'kg', 'L', 'm'] }}
+             />
             <NewProductSheet />
         </div>
       <div className="rounded-lg border">

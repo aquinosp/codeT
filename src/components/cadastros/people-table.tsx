@@ -11,11 +11,10 @@ import {
 import { Badge } from "../ui/badge"
 import { NewPersonSheet } from "./new-person-sheet"
 import { Person } from "@/lib/types"
-import { Button } from "../ui/button"
-import { Upload } from "lucide-react"
 import { useEffect, useState } from "react"
 import { collection, onSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { BulkImportSheet } from "./bulk-import-sheet"
 
 const getBadgeVariant = (type: Person['type']) => {
   switch (type) {
@@ -44,10 +43,12 @@ export function PeopleTable() {
   return (
     <div className="space-y-4">
         <div className="flex items-center justify-end gap-2">
-            <Button variant="outline">
-                <Upload className="-ml-1 h-4 w-4" />
-                Importar em massa
-            </Button>
+            <BulkImportSheet
+              collectionName="people"
+              fields={['name', 'phone', 'email', 'cpfCnpj', 'type']}
+              requiredFields={['name', 'phone', 'type']}
+              enumFields={{ 'type': ['Cliente', 'Fornecedor', 'Funcionário'] }}
+             />
             <NewPersonSheet />
         </div>
       <div className="rounded-lg border">
