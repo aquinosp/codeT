@@ -38,7 +38,7 @@ function SlaTimer({ date }: { date: Date }) {
       setTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
     }
     updateTimer();
-    const interval = setInterval(updateTimer, 60000);
+    const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, [date]);
 

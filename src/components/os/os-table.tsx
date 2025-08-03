@@ -42,7 +42,7 @@ function getStatusVariant(status: ServiceOrder['status']) {
 function SlaTimer({ date }: { date: Date }) {
   const [time, setTime] = useState("")
 
-  useState(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       const diff = new Date().getTime() - date.getTime();
       const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -50,7 +50,7 @@ function SlaTimer({ date }: { date: Date }) {
       setTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
     }, 1000);
     return () => clearInterval(interval);
-  })
+  },[date])
 
   return (
     <div className="flex items-center gap-1 text-sm text-muted-foreground">
