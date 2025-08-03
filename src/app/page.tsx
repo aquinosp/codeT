@@ -1,7 +1,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer } from "recharts"
+import { Bar, BarChart, Line, LineChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
 
 import {
@@ -9,6 +9,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card"
 import {
   ChartContainer,
@@ -20,34 +21,50 @@ import {
 import AppShell from "@/components/app-shell"
 
 const osData = [
-  { status: "Concluído", count: 25, fill: "var(--color-chart-1)" },
-  { status: "Em Progresso", count: 12, fill: "var(--color-chart-2)" },
-  { status: "Aguardando", count: 8, fill: "var(--color-chart-5)" },
+  { status: "Concluído", count: 25, fill: "var(--color-concluido)" },
+  { status: "Em Progresso", count: 12, fill: "var(--color-em_progresso)" },
+  { status: "Aguardando", count: 8, fill: "var(--color-aguardando)" },
 ];
 
 const revenueData = [
-    { month: "Jan", revenue: 4200 },
-    { month: "Feb", revenue: 5100 },
-    { month: "Mar", revenue: 5500 },
-    { month: "Apr", revenue: 4800 },
-    { month: "May", revenue: 6200 },
-    { month: "Jun", revenue: 7800 },
-    { month: "Jul", revenue: 7100 },
-    { month: "Aug", revenue: 8200 },
-    { month: "Sep", revenue: 8900 },
-    { month: "Oct", revenue: 9500 },
-    { month: "Nov", revenue: 9100 },
-    { month: "Dec", revenue: 10500 },
+    { month: "Jan", revenue: 4200, expenses: 2000 },
+    { month: "Feb", revenue: 5100, expenses: 2500 },
+    { month: "Mar", revenue: 5500, expenses: 3000 },
+    { month: "Apr", revenue: 4800, expenses: 2800 },
+    { month: "May", revenue: 6200, expenses: 3500 },
+    { month: "Jun", revenue: 7800, expenses: 4000 },
+    { month: "Jul", revenue: 7100, expenses: 3800 },
+    { month: "Aug", revenue: 8200, expenses: 4500 },
+    { month: "Sep", revenue: 8900, expenses: 4800 },
+    { month: "Oct", revenue: 9500, expenses: 5000 },
+    { month: "Nov", revenue: 9100, expenses: 5200 },
+    { month: "Dec", revenue: 10500, expenses: 6000 },
 ];
 
 const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
     revenue: {
         label: "Receita",
-        color: "hsl(var(--primary))",
+        color: "hsl(var(--chart-1))",
+    },
+    expenses: {
+        label: "Despesas",
+        color: "hsl(var(--chart-2))",
     },
     count: {
         label: "OS",
     },
+    concluido: {
+      label: "Concluído",
+      color: "hsl(var(--chart-1))"
+    },
+    em_progresso: {
+      label: "Em Progresso",
+      color: "hsl(var(--chart-2))"
+    },
+    aguardando: {
+      label: "Aguardando",
+      color: "hsl(var(--chart-5))"
+    }
 };
 
 export default function DashboardPage() {
@@ -110,17 +127,36 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="lg:col-span-4">
             <CardHeader>
-              <CardTitle>Receita por Serviço</CardTitle>
+              <CardTitle>Receitas vs. Despesas</CardTitle>
+              <CardDescription>Comparativo mensal de receitas e despesas</CardDescription>
             </CardHeader>
             <CardContent className="pl-2">
               <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                <ResponsiveContainer>
-                  <BarChart data={revenueData} accessibilityLayer>
-                     <ChartTooltip
-                      content={<ChartTooltipContent indicator="dot" />}
-                    />
-                    <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
+                 <ResponsiveContainer>
+                    <BarChart data={revenueData}>
+                        <XAxis
+                        dataKey="month"
+                        tickLine={false}
+                        tickMargin={10}
+                        axisLine={false}
+                        />
+                        <ChartTooltip
+                        content={<ChartTooltipContent indicator="dot" />}
+                        />
+                        <ChartLegend content={<ChartLegendContent />} />
+                        <Bar
+                        dataKey="revenue"
+                        fill="var(--color-revenue)"
+                        radius={4}
+                        />
+                        <Line
+                        type="monotone"
+                        dataKey="expenses"
+                        stroke="var(--color-expenses)"
+                        strokeWidth={2}
+                        dot={false}
+                        />
+                    </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </CardContent>
@@ -131,14 +167,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="flex justify-center items-center">
               <ChartContainer
-                config={{
-                  count: {
-                    label: "OS",
-                  },
-                  Concluído: { label: "Concluído", color: "hsl(var(--chart-1))" },
-                  "Em Progresso": { label: "Em Progresso", color: "hsl(var(--chart-2))" },
-                  Aguardando: { label: "Aguardando", color: "hsl(var(--chart-5))" },
-                }}
+                config={chartConfig}
                 className="mx-auto aspect-square h-[250px]"
               >
                 <ResponsiveContainer>
