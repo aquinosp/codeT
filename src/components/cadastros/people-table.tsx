@@ -8,12 +8,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { mockPeople } from "@/lib/data"
 import { Badge } from "../ui/badge"
 import { NewPersonSheet } from "./new-person-sheet"
 import { Person } from "@/lib/types"
 import { Button } from "../ui/button"
 import { Upload } from "lucide-react"
+import { useEffect, useState } from "react"
+import { collection, onSnapshot } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 const getBadgeVariant = (type: Person['type']) => {
   switch (type) {
@@ -29,6 +31,16 @@ const getBadgeVariant = (type: Person['type']) => {
 }
 
 export function PeopleTable() {
+  const [people, setPeople] = useState<Person[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "people"), (snapshot) => {
+      const data: Person[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person));
+      setPeople(data);
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="space-y-4">
         <div className="flex items-center justify-end gap-2">
@@ -50,7 +62,7 @@ export function PeopleTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockPeople.map((person) => (
+            {people.map((person) => (
               <TableRow key={person.id}>
                 <TableCell className="font-medium">{person.name}</TableCell>
                 <TableCell>{person.phone}</TableCell>

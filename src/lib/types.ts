@@ -1,3 +1,5 @@
+import type { Timestamp } from "firebase/firestore";
+
 export type Person = {
   id: string;
   name: string;
@@ -39,6 +41,18 @@ export type ServiceOrder = {
   total: number;
   paymentMethod?: 'PIX' | 'Cartão' | 'Dinheiro';
 };
+
+export type ServiceOrderDocument = Omit<ServiceOrder, 'id' | 'customer' | 'items' | 'createdAt'> & {
+  customerId: string;
+  createdAt: Timestamp;
+  items: {
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+  }[];
+}
+
 
 export type Purchase = {
   id: string;

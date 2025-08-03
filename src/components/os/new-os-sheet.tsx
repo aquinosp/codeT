@@ -20,13 +20,15 @@ import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { mockPeople, mockProducts } from "@/lib/data"
-import type { ServiceOrder } from "@/lib/types"
+import type { ServiceOrder, Person, Product, ServiceOrderDocument } from "@/lib/types"
 import React, { useEffect, useState } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { NewPersonSheet } from "../cadastros/new-person-sheet"
+import { addDoc, collection, onSnapshot, doc, getDoc, Timestamp, updateDoc, getDocs, query, orderBy, limit } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+
 
 const osSchema = z.object({
   osNumber: z.string(),
@@ -50,6 +52,8 @@ interface NewOsSheetProps {
 export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProps) {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false);
+  const [people, setPeople] = useState<Person[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const form = useForm<z.infer<typeof osSchema>>({
     resolver: zodResolver(osSchema),
@@ -65,7 +69,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
         quantity: i.quantity 
       }))
     } : {
-      osNumber: "OS-NOVA",
+      osNumber: "Carregando...",
       technician: "Técnico Padrão",
       description: "",
       items: [],
@@ -76,13 +80,44 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     control: form.control,
     name: "items"
   })
+  
+  const fetchNewOsNumber = async () => {
+    if (!isEditing) {
+      const q = query(collection(db, "serviceOrders"), orderBy("osNumber", "desc"), limit(1));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const lastOsNumber = querySnapshot.docs[0].data().osNumber;
+        const lastNumber = parseInt(lastOsNumber.split('-')[1]);
+        const newOsNumber = `OS-${(lastNumber + 1).toString().padStart(3, '0')}`;
+        form.setValue("osNumber", newOsNumber);
+      } else {
+        form.setValue("osNumber", "OS-001");
+      }
+    }
+  };
 
   useEffect(() => {
-    if (isOpen && !isEditing && fields.length === 0) {
-      append({ productId: "", description: "", unitPrice: 0, quantity: 1 });
+    if (isOpen) {
+      fetchNewOsNumber();
+      if (!isEditing && fields.length === 0) {
+        append({ productId: "", description: "", unitPrice: 0, quantity: 1 });
+      }
     }
-  }, [isOpen, isEditing, fields, append]);
+  }, [isOpen, isEditing, fields.length, append, form]);
 
+
+  useEffect(() => {
+    const unsubPeople = onSnapshot(collection(db, "people"), (snapshot) => {
+      setPeople(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person)));
+    });
+    const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
+      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+    });
+    return () => {
+      unsubPeople();
+      unsubProducts();
+    };
+  }, []);
 
   const watchedItems = useWatch({
     control: form.control,
@@ -97,21 +132,52 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
 
 
   const handleProductChange = (productId: string, index: number) => {
-    const product = mockProducts.find(p => p.id === productId);
+    const product = products.find(p => p.id === productId);
     if (product) {
       form.setValue(`items.${index}.description`, product.description);
       form.setValue(`items.${index}.unitPrice`, product.sellPrice);
     }
   }
 
-  const handleSave = (values: z.infer<typeof osSchema>) => {
-    console.log("Saving OS:", values)
-    toast({
-      title: `OS ${isEditing ? 'Atualizada' : 'Salva'}!`,
-      description: `A ordem de serviço ${values.osNumber} foi ${isEditing ? 'atualizada' : 'salva'} com sucesso.`,
-    })
-    form.reset();
-    setIsOpen(false);
+  const handleSave = async (values: z.infer<typeof osSchema>) => {
+    try {
+      const osData: Omit<ServiceOrderDocument, 'createdAt'> & {createdAt?: Timestamp} = {
+        osNumber: values.osNumber,
+        customerId: values.customer,
+        technician: values.technician,
+        description: values.description,
+        status: isEditing ? order!.status : 'Aguardando',
+        total: totalValue,
+        items: values.items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.quantity * item.unitPrice,
+        })),
+      };
+
+      if (isEditing && order) {
+        const orderRef = doc(db, "serviceOrders", order.id);
+        await updateDoc(orderRef, osData);
+      } else {
+        osData.createdAt = Timestamp.now();
+        await addDoc(collection(db, "serviceOrders"), osData);
+      }
+
+      toast({
+        title: `OS ${isEditing ? 'Atualizada' : 'Salva'}!`,
+        description: `A ordem de serviço ${values.osNumber} foi ${isEditing ? 'atualizada' : 'salva'} com sucesso.`,
+      })
+      form.reset();
+      setIsOpen(false);
+    } catch (error) {
+       console.error("Error saving OS: ", error);
+       toast({
+         title: "Erro ao salvar",
+         description: "Ocorreu um erro ao salvar a Ordem de Serviço.",
+         variant: "destructive"
+       })
+    }
   }
 
   function onSaveAndPrint(values: z.infer<typeof osSchema>) {
@@ -189,7 +255,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {mockPeople.filter(p => p.type === 'Cliente').map(p => (
+                        {people.filter(p => p.type === 'Cliente').map(p => (
                           <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                         ))}
                       </SelectContent>
@@ -229,7 +295,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {mockProducts.map(p => (
+                              {products.map(p => (
                                 <SelectItem key={p.id} value={p.id}>{p.code}</SelectItem>
                               ))}
                             </SelectContent>

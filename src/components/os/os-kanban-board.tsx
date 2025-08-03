@@ -3,8 +3,7 @@
 import React, { useState, DragEvent, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { ServiceOrder } from '@/lib/types';
-import { mockServiceOrders } from '@/lib/data';
+import type { ServiceOrder, ServiceOrderDocument } from '@/lib/types';
 import { MoreHorizontal, Timer } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
@@ -16,6 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { PaymentDialog } from './payment-dialog';
 import { NewOsSheet } from './new-os-sheet';
+import { collection, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 type Status = ServiceOrder['status'];
 
@@ -50,9 +51,40 @@ function SlaTimer({ date }: { date: Date }) {
 }
 
 export function OsKanbanBoard() {
-  const [orders, setOrders] = useState<ServiceOrder[]>(mockServiceOrders);
+  const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
   const [paymentOrder, setPaymentOrder] = useState<ServiceOrder | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "serviceOrders"), async (snapshot) => {
+      const ordersData = await Promise.all(snapshot.docs.map(async (d) => {
+        const orderData = d.data() as ServiceOrderDocument;
+        
+        const customerDoc = await getDoc(doc(db, "people", orderData.customerId));
+        const customer = { id: customerDoc.id, ...customerDoc.data() };
+
+        const items = await Promise.all(orderData.items.map(async (item) => {
+          const productDoc = await getDoc(doc(db, "products", item.productId));
+          return {
+            id: productDoc.id,
+            product: { id: productDoc.id, ...productDoc.data() },
+            ...item
+          };
+        }));
+
+        return {
+          id: d.id,
+          ...orderData,
+          customer,
+          items,
+          createdAt: orderData.createdAt.toDate(),
+        } as ServiceOrder;
+      }));
+      setOrders(ordersData);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>, orderId: string) => {
     e.dataTransfer.setData('text/plain', orderId);
@@ -62,8 +94,8 @@ export function OsKanbanBoard() {
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
-
-  const handleDrop = (e: DragEvent<HTMLDivElement>, newStatus: Status) => {
+  
+  const handleDrop = async (e: DragEvent<HTMLDivElement>, newStatus: Status) => {
     e.preventDefault();
     const orderId = e.dataTransfer.getData('text/plain');
     setDraggedOrder(null);
@@ -72,17 +104,15 @@ export function OsKanbanBoard() {
     if (order && newStatus === 'Concluído' && order.status !== 'Concluído') {
         setPaymentOrder(order);
     } else if (order) {
-        setOrders(prevOrders =>
-            prevOrders.map(o => (o.id === orderId ? { ...o, status: newStatus } : o))
-        );
+        const orderRef = doc(db, "serviceOrders", orderId);
+        await updateDoc(orderRef, { status: newStatus });
     }
   };
 
-  const handlePaymentConfirm = (method: ServiceOrder['paymentMethod']) => {
+  const handlePaymentConfirm = async (method: ServiceOrder['paymentMethod']) => {
     if(paymentOrder){
-      setOrders(prevOrders =>
-        prevOrders.map(o => (o.id === paymentOrder.id ? { ...o, status: 'Concluído', paymentMethod: method } : o))
-      );
+       const orderRef = doc(db, "serviceOrders", paymentOrder.id);
+       await updateDoc(orderRef, { status: 'Concluído', paymentMethod: method });
     }
     setPaymentOrder(null);
   }

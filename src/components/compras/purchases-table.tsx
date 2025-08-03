@@ -9,13 +9,42 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { mockPurchases } from "@/lib/data"
 import { Calendar as CalendarIcon, Download } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { NewPurchaseSheet } from "./new-purchase-sheet"
+import { useEffect, useState } from "react"
+import type { Purchase } from "@/lib/types"
+import { collection, getDocs, doc, getDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+
+async function fetchPurchases(): Promise<Purchase[]> {
+    const purchasesCol = collection(db, 'purchases');
+    const purchaseSnapshot = await getDocs(purchasesCol);
+    const purchaseList = purchaseSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+
+    const purchases = await Promise.all(purchaseList.map(async (p) => {
+        const supplierDoc = await getDoc(doc(db, "people", p.supplierId));
+        const itemDoc = await getDoc(doc(db, "products", p.itemId));
+
+        return {
+            ...p,
+            supplier: { id: supplierDoc.id, ...supplierDoc.data() },
+            item: { id: itemDoc.id, ...itemDoc.data() },
+            paymentDate: p.paymentDate.toDate(),
+        } as Purchase;
+    }));
+
+    return purchases;
+}
 
 export function PurchasesTable() {
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+
+  useEffect(() => {
+    fetchPurchases().then(setPurchases);
+  }, []);
+
   return (
     <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -50,7 +79,7 @@ export function PurchasesTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockPurchases.map((purchase) => (
+            {purchases.map((purchase) => (
               <TableRow key={purchase.id}>
                 <TableCell className="font-medium">{purchase.invoice}</TableCell>
                 <TableCell>{purchase.supplier.name}</TableCell>

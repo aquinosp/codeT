@@ -8,13 +8,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { mockProducts } from "@/lib/data"
 import { Progress } from "@/components/ui/progress"
 import { NewProductSheet } from "./new-product-sheet"
 import { Button } from "../ui/button"
 import { Upload } from "lucide-react"
+import { useEffect, useState } from "react"
+import type { Product } from "@/lib/types"
+import { collection, onSnapshot } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 export function ProductsTable() {
+    const [products, setProducts] = useState<Product[]>([]);
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, "products"), (snapshot) => {
+            const data: Product[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+            setProducts(data);
+        });
+        return () => unsubscribe();
+    }, []);
+
   return (
     <div className="space-y-4">
         <div className="flex items-center justify-end gap-2">
@@ -35,7 +48,7 @@ export function ProductsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockProducts.map((product) => (
+            {products.map((product) => (
               <TableRow key={product.id}>
                 <TableCell className="font-mono text-xs">{product.code}</TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>

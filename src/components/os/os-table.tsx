@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { MoreHorizontal, Timer } from "lucide-react"
 import {
   Table,
@@ -19,10 +19,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { mockServiceOrders } from "@/lib/data"
-import type { ServiceOrder } from "@/lib/types"
+import type { ServiceOrder, ServiceOrderDocument } from "@/lib/types"
 import { PaymentDialog } from "./payment-dialog"
 import { NewOsSheet } from "./new-os-sheet"
+import { collection, onSnapshot, doc, getDoc, updateDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+
 
 function getStatusVariant(status: ServiceOrder['status']) {
   switch (status) {
@@ -60,16 +62,48 @@ function SlaTimer({ date }: { date: Date }) {
 
 
 export function OsTable() {
-  const [orders, setOrders] = useState(mockServiceOrders);
+  const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "serviceOrders"), async (snapshot) => {
+      const ordersData = await Promise.all(snapshot.docs.map(async (d) => {
+        const orderData = d.data() as ServiceOrderDocument;
+        
+        const customerDoc = await getDoc(doc(db, "people", orderData.customerId));
+        const customer = { id: customerDoc.id, ...customerDoc.data() };
+
+        const items = await Promise.all(orderData.items.map(async (item) => {
+          const productDoc = await getDoc(doc(db, "products", item.productId));
+          return {
+            id: productDoc.id,
+            product: { id: productDoc.id, ...productDoc.data() },
+            ...item
+          };
+        }));
+
+        return {
+          id: d.id,
+          ...orderData,
+          customer,
+          items,
+          createdAt: orderData.createdAt.toDate(),
+        } as ServiceOrder;
+      }));
+      setOrders(ordersData);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleComplete = (order: ServiceOrder) => {
     setSelectedOrder(order);
   }
 
-  const handlePayment = (method: 'PIX' | 'Cartão' | 'Dinheiro') => {
+  const handlePayment = async (method: 'PIX' | 'Cartão' | 'Dinheiro') => {
     if (selectedOrder) {
-      setOrders(orders.map(o => o.id === selectedOrder.id ? { ...o, status: 'Concluído', paymentMethod: method } : o))
+      const orderRef = doc(db, "serviceOrders", selectedOrder.id);
+      await updateDoc(orderRef, { status: 'Concluído', paymentMethod: method });
     }
     setSelectedOrder(null)
   }

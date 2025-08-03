@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Plus } from "lucide-react"
+import { addDoc, collection } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 import {
   Sheet,
@@ -52,11 +54,16 @@ export function NewProductSheet() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof productSchema>) {
-    console.log(values)
-    toast({ title: "Produto Salvo", description: `O produto ${values.name} foi salvo com sucesso.` })
-    form.reset()
-    setIsOpen(false)
+  async function onSubmit(values: z.infer<typeof productSchema>) {
+    try {
+      await addDoc(collection(db, "products"), values);
+      toast({ title: "Produto Salvo", description: `O produto ${values.name} foi salvo com sucesso.` })
+      form.reset()
+      setIsOpen(false)
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      toast({ title: "Erro", description: "Ocorreu um erro ao salvar o produto.", variant: "destructive" });
+    }
   }
 
   return (

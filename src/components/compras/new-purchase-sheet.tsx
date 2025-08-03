@@ -19,11 +19,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
-import { mockPeople, mockProducts } from "@/lib/data"
 import { format } from "date-fns"
+import { useEffect, useState } from "react"
+import type { Person, Product } from "@/lib/types"
+import { collection, onSnapshot } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 
 export function NewPurchaseSheet() {
+  const [people, setPeople] = useState<Person[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const unsubPeople = onSnapshot(collection(db, "people"), (snapshot) => {
+      setPeople(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person)));
+    });
+    const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
+      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+    });
+    return () => {
+      unsubPeople();
+      unsubProducts();
+    };
+  }, []);
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -44,7 +63,7 @@ export function NewPurchaseSheet() {
                 <SelectValue placeholder="Selecione um fornecedor" />
               </SelectTrigger>
               <SelectContent>
-                {mockPeople.filter(p => p.type === 'Fornecedor').map(p => (
+                {people.filter(p => p.type === 'Fornecedor').map(p => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -57,7 +76,7 @@ export function NewPurchaseSheet() {
                     <SelectValue placeholder="Selecione um item" />
                 </SelectTrigger>
                 <SelectContent>
-                    {mockProducts.map(p => (
+                    {products.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
                 </SelectContent>
