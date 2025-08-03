@@ -29,41 +29,17 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group"
 const productGroups = ['ACESSÓRIO', 'PARTES', 'PEÇAS', 'PNEUMÁTICOS', 'RELAÇÃO', 'SERVIÇO'] as const;
 
 const productSchema = z.object({
-  code: z.string().min(1, "Código é obrigatório"),
-  name: z.string().min(1, "Nome é obrigatório"),
-  description: z.string(),
+  code: z.string().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
   barcode: z.string().optional(),
-  type: z.enum(["Produto", "Serviço"], { required_error: "Tipo é obrigatório" }),
-  group: z.string().min(1, "Grupo é obrigatório"),
-  costPrice: z.coerce.number().positive("Deve ser um número positivo"),
-  sellPrice: z.coerce.number().positive("Deve ser um número positivo"),
-  stock: z.coerce.number().int("Deve ser um número inteiro").optional(),
-  minStock: z.coerce.number().int("Deve ser um número inteiro").optional(),
+  type: z.enum(["Produto", "Serviço"]),
+  group: z.string().optional(),
+  costPrice: z.coerce.number().optional(),
+  sellPrice: z.coerce.number().optional(),
+  stock: z.coerce.number().int().optional(),
+  minStock: z.coerce.number().int().optional(),
   unit: z.enum(["un", "kg", "L", "m"]).optional(),
-}).superRefine((data, ctx) => {
-    if (data.type === 'Produto') {
-        if (data.stock === undefined || data.stock === null || isNaN(data.stock)) {
-             ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ['stock'],
-                message: 'Estoque é obrigatório para produtos',
-            });
-        }
-        if (data.minStock === undefined || data.minStock === null || isNaN(data.minStock)) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ['minStock'],
-                message: 'Estoque mínimo é obrigatório para produtos',
-            });
-        }
-         if (!data.unit) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ['unit'],
-                message: 'Unidade é obrigatória para produtos',
-            });
-        }
-    }
 });
 
 

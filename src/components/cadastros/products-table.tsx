@@ -35,7 +35,7 @@ export function ProductsTable() {
             <BulkImportSheet
               collectionName="products"
               fields={['code', 'name', 'description', 'barcode', 'group', 'type', 'costPrice', 'sellPrice', 'stock', 'minStock', 'unit']}
-              requiredFields={['code', 'name', 'type', 'group', 'costPrice', 'sellPrice']}
+              requiredFields={[]}
               numericFields={['costPrice', 'sellPrice', 'stock', 'minStock']}
               enumFields={{ 
                   'unit': ['un', 'kg', 'L', 'm'],
@@ -67,7 +67,7 @@ export function ProductsTable() {
                     <Badge variant={product.type === 'Produto' ? 'secondary' : 'outline'}>{product.type}</Badge>
                 </TableCell>
                 <TableCell>
-                  {product.sellPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  {product.sellPrice?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </TableCell>
                 <TableCell>
                     {product.type === 'Produto' ? (
