@@ -12,7 +12,7 @@ import { Badge } from "../ui/badge"
 import { NewPersonSheet } from "./new-person-sheet"
 import { Person } from "@/lib/types"
 import { useEffect, useState } from "react"
-import { collection, onSnapshot } from "firebase/firestore"
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { BulkImportSheet } from "./bulk-import-sheet"
 
@@ -33,7 +33,8 @@ export function PeopleTable() {
   const [people, setPeople] = useState<Person[]>([]);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "people"), (snapshot) => {
+    const q = query(collection(db, "people"), orderBy("name", "asc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const data: Person[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person));
       setPeople(data);
     });

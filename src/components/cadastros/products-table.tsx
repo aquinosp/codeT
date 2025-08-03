@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { NewProductSheet } from "./new-product-sheet"
 import { useEffect, useState } from "react"
 import type { Product } from "@/lib/types"
-import { collection, onSnapshot } from "firebase/firestore"
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { BulkImportSheet } from "./bulk-import-sheet"
 import { Badge } from "../ui/badge"
@@ -21,7 +21,8 @@ export function ProductsTable() {
     const [products, setProducts] = useState<Product[]>([]);
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, "products"), (snapshot) => {
+        const q = query(collection(db, "products"), orderBy("name", "asc"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const data: Product[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
             setProducts(data);
         });
