@@ -20,9 +20,10 @@ import { db } from "@/lib/firebase"
 
 type Status = ServiceOrder['status'];
 
-const columns: Status[] = ['Aguardando', 'Em Progresso', 'Concluído'];
+const columns: Status[] = ['Aguardando', 'Aguardando Peça', 'Em Progresso', 'Concluído'];
 const columnTitles: Record<Status, string> = {
   'Aguardando': 'Aguardando',
+  'Aguardando Peça': 'Aguardando Peça',
   'Em Progresso': 'Em Progresso',
   'Concluído': 'Concluído',
 };
@@ -131,7 +132,7 @@ export function OsKanbanBoard() {
 
   return (
     <>
-    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
       {columns.map(status => (
         <div
           key={status}

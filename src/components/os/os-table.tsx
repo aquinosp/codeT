@@ -32,6 +32,8 @@ function getStatusVariant(status: ServiceOrder['status']) {
       return 'default'
     case 'Em Progresso':
       return 'secondary'
+    case 'Aguardando Peça':
+        return 'destructive'
     case 'Aguardando':
       return 'outline'
     default:

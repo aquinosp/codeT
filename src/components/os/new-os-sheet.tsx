@@ -181,6 +181,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
         await updateDoc(orderRef, osData);
       } else {
         osData.createdAt = Timestamp.now();
+        osData.status = 'Aguardando Peça';
         await addDoc(collection(db, "serviceOrders"), osData);
       }
 
