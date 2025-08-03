@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast"
 import { NewPersonSheet } from "../cadastros/new-person-sheet"
 import { addDoc, collection, onSnapshot, doc, getDoc, Timestamp, updateDoc, getDocs, query, orderBy, limit } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { Combobox } from "../ui/combobox"
 
 
 const osSchema = z.object({
@@ -107,7 +108,8 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
 
 
   useEffect(() => {
-    const unsubPeople = onSnapshot(collection(db, "people"), (snapshot) => {
+    const q = query(collection(db, "people"), orderBy("name", "asc"));
+    const unsubPeople = onSnapshot(q, (snapshot) => {
       setPeople(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person)));
     });
     const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
@@ -190,6 +192,10 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
   const title = isEditing ? "Editar Ordem de Serviço" : "Nova Ordem de Serviço";
   const description = isEditing ? "Faça alterações na OS existente." : "Preencha os detalhes para criar uma nova ordem de serviço.";
 
+  const customerOptions = people
+    .filter(p => p.type === 'Cliente')
+    .map(p => ({ value: p.id, label: p.name }));
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild onClick={() => setIsOpen(true)}>
@@ -245,21 +251,17 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
               control={form.control}
               name="customer"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Cliente</FormLabel>
                   <div className="flex gap-2">
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um cliente" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {people.filter(p => p.type === 'Cliente').map(p => (
-                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                     <Combobox
+                        options={customerOptions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Selecione um cliente"
+                        searchPlaceholder="Pesquisar cliente..."
+                        notFoundText="Nenhum cliente encontrado."
+                      />
                      <NewPersonSheet />
                   </div>
                   <FormMessage />
