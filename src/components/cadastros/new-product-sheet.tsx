@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Plus, Sparkles } from "lucide-react"
+import { Plus } from "lucide-react"
 
 import {
   Sheet,
@@ -22,7 +22,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useToast } from "@/hooks/use-toast"
-import { suggestDescriptionAction } from "@/app/actions"
 
 const productSchema = z.object({
   code: z.string().min(1, "Código é obrigatório"),
@@ -37,46 +36,33 @@ const productSchema = z.object({
 
 export function NewProductSheet() {
   const { toast } = useToast()
-  const [isAiLoading, setIsAiLoading] = useState(false)
-  const [shortInput, setShortInput] = useState("")
+  const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       unit: "un",
+      code: "",
+      name: "",
+      description: "",
+      costPrice: undefined,
+      sellPrice: undefined,
+      stock: undefined,
+      minStock: undefined,
     },
   })
-
-  const handleSuggestDescription = async () => {
-    if (!shortInput) {
-        toast({ title: "Entrada vazia", description: "Por favor, digite uma breve descrição para a IA.", variant: "destructive" })
-        return
-    }
-    setIsAiLoading(true)
-    try {
-      const result = await suggestDescriptionAction({ shortInput })
-      if (result.suggestedDescription) {
-        form.setValue("description", result.suggestedDescription)
-        toast({ title: "Descrição sugerida!", description: "A IA gerou uma descrição para você." })
-      }
-    } catch (error) {
-      toast({ title: "Erro da IA", description: "Não foi possível sugerir uma descrição.", variant: "destructive" })
-      console.error(error)
-    } finally {
-      setIsAiLoading(false)
-    }
-  }
-
 
   function onSubmit(values: z.infer<typeof productSchema>) {
     console.log(values)
     toast({ title: "Produto Salvo", description: `O produto ${values.name} foi salvo com sucesso.` })
+    form.reset()
+    setIsOpen(false)
   }
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button><Plus className="-ml-1 h-4 w-4" /> Novo Produto</Button>
+        <Button onClick={() => setIsOpen(true)}><Plus className="-ml-1 h-4 w-4" /> Novo Produto</Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-2xl w-full flex flex-col">
         <SheetHeader>
@@ -102,20 +88,6 @@ export function NewProductSheet() {
                   <FormMessage />
                 </FormItem>
               )} />
-            </div>
-
-            <div className="space-y-2">
-                <FormLabel>Descrição com IA</FormLabel>
-                <div className="flex items-center gap-2">
-                    <Input 
-                        placeholder="Entrada curta para IA. Ex: 'pastilha de freio de cerâmica'"
-                        value={shortInput}
-                        onChange={(e) => setShortInput(e.target.value)}
-                    />
-                    <Button type="button" variant="outline" size="icon" onClick={handleSuggestDescription} disabled={isAiLoading}>
-                        <Sparkles className={`h-4 w-4 ${isAiLoading ? 'animate-spin' : ''}`} />
-                    </Button>
-                </div>
             </div>
 
             <FormField name="description" control={form.control} render={({ field }) => (
