@@ -70,8 +70,8 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
         unitPrice: i.unitPrice,
         quantity: i.quantity 
       })),
-      discount: order?.discount,
-      surcharge: order?.surcharge,
+      discount: order?.discount || 0,
+      surcharge: order?.surcharge || 0,
     } : {
       osNumber: "Carregando...",
       technician: undefined,
