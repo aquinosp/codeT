@@ -42,6 +42,8 @@ const osSchema = z.object({
     unitPrice: z.coerce.number(),
     quantity: z.coerce.number().min(1, "Min. 1"),
   })).min(1, "Adicione pelo menos um item"),
+  discount: z.coerce.number().optional(),
+  surcharge: z.coerce.number().optional(),
 })
 
 interface NewOsSheetProps {
@@ -67,12 +69,16 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
         productId: i.product.id,
         unitPrice: i.unitPrice,
         quantity: i.quantity 
-      }))
+      })),
+      discount: order?.discount,
+      surcharge: order?.surcharge,
     } : {
       osNumber: "Carregando...",
       technician: undefined,
       description: "",
       items: [],
+      discount: 0,
+      surcharge: 0,
     },
   })
 
@@ -125,13 +131,24 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     control: form.control,
     name: "items"
   });
+  
+  const watchedDiscount = useWatch({
+    control: form.control,
+    name: "discount"
+  })
 
-  const totalValue = watchedItems.reduce((acc, current) => {
+  const watchedSurcharge = useWatch({
+    control: form.control,
+    name: "surcharge"
+  })
+
+  const subTotal = watchedItems.reduce((acc, current) => {
     const price = current.unitPrice || 0;
     const quantity = current.quantity || 0;
     return acc + (price * quantity);
   }, 0);
 
+  const totalValue = subTotal - (watchedDiscount || 0) + (watchedSurcharge || 0);
 
   const handleProductChange = (productId: string, index: number) => {
     const product = products.find(p => p.id === productId);
@@ -149,6 +166,8 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
         description: values.description,
         status: isEditing ? order!.status : 'Aguardando',
         total: totalValue,
+        discount: values.discount,
+        surcharge: values.surcharge,
         items: values.items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -357,7 +376,36 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
               )}
             />
 
-            <div className="flex justify-end items-center gap-4 mt-auto">
+            <div className="flex justify-between items-start gap-4 mt-auto">
+              <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="surcharge"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Acréscimo (R$)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0,00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="discount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Desconto (R$)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0,00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+              </div>
+
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Valor Total</p>
                 <p className="text-2xl font-bold">{totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>

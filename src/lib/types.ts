@@ -43,6 +43,8 @@ export type ServiceOrder = {
   items: ServiceOrderItem[];
   total: number;
   paymentMethod?: 'PIX' | 'Cartão' | 'Dinheiro';
+  discount?: number;
+  surcharge?: number;
 };
 
 export type ServiceOrderDocument = Omit<ServiceOrder, 'id' | 'customer' | 'items' | 'createdAt'> & {
