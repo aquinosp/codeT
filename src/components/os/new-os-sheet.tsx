@@ -71,7 +71,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
       }))
     } : {
       osNumber: "Carregando...",
-      technician: "Técnico Padrão",
+      technician: undefined,
       description: "",
       items: [],
     },
@@ -197,6 +197,10 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     .filter(p => p.type === 'Cliente')
     .map(p => ({ value: p.id, label: p.name }));
 
+  const technicianOptions = people
+    .filter(p => p.type === 'Funcionário')
+    .map(p => ({ value: p.name, label: p.name }));
+
   const productOptions = products.map(p => ({ value: p.id, label: `${p.code || 'S/C'} - ${p.name}` }));
 
   return (
@@ -238,10 +242,9 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Técnico Padrão">Técnico Padrão</SelectItem>
-                        <SelectItem value="Júlio Chaves">Júlio Chaves</SelectItem>
-                        <SelectItem value="Carlos">Carlos</SelectItem>
-                        <SelectItem value="Marcos">Marcos</SelectItem>
+                        {technicianOptions.map(tech => (
+                          <SelectItem key={tech.value} value={tech.value}>{tech.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
