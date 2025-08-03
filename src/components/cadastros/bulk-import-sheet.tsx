@@ -134,11 +134,6 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
             }
             
             if (collectionName === 'products') {
-                if (docData.type === 'Produto' && (!docData.stock || !docData.unit)) {
-                    errorCount++;
-                    errorMessages.push(`Linha ${index + 2}: Estoque e Unidade são obrigatórios para 'Produto'`);
-                    return;
-                }
                 if(docData.type === 'Serviço') {
                     delete docData.stock;
                     delete docData.minStock;
