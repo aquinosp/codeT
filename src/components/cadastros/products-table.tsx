@@ -11,11 +11,17 @@ import {
 import { mockProducts } from "@/lib/data"
 import { Progress } from "@/components/ui/progress"
 import { NewProductSheet } from "./new-product-sheet"
+import { Button } from "../ui/button"
+import { Upload } from "lucide-react"
 
 export function ProductsTable() {
   return (
     <div className="space-y-4">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+            <Button variant="outline">
+                <Upload className="-ml-1 h-4 w-4" />
+                Importar em massa
+            </Button>
             <NewProductSheet />
         </div>
       <div className="rounded-lg border">
