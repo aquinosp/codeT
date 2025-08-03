@@ -48,136 +48,138 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
 
     setIsImporting(true);
     
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const data = new Uint8Array(e.target!.result as ArrayBuffer);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const json: any[] = XLSX.utils.sheet_to_json(worksheet);
+    try {
+        const data = await selectedFile.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet);
 
-            if (json.length === 0) {
-                toast({ title: "Arquivo Vazio", description: "O arquivo Excel parece estar vazio.", variant: "destructive" });
-                setIsImporting(false);
-                return;
-            }
+        if (json.length === 0) {
+            toast({ title: "Arquivo Vazio", description: "O arquivo Excel parece estar vazio.", variant: "destructive" });
+            setIsImporting(false);
+            return;
+        }
+        
+        const header = Object.keys(json[0]);
+        const validHeader = header.every(h => fields.includes(h));
+        if(!validHeader){
+            toast({
+                title: "Erro no Cabeçalho",
+                description: `O cabeçalho do arquivo contém colunas inválidas. As colunas válidas são: ${fields.join(', ')}.`,
+                variant: "destructive"
+            });
+            setIsImporting(false);
+            return;
+        }
+
+        const missingRequiredFields = requiredFields.filter(f => !header.includes(f));
+        if (missingRequiredFields.length > 0) {
+              toast({
+                title: "Erro no Cabeçalho",
+                description: `As seguintes colunas obrigatórias estão faltando: ${missingRequiredFields.join(',')}.`,
+                variant: "destructive"
+            });
+            setIsImporting(false);
+            return;
+        }
+
+        const batch = writeBatch(db);
+        let errorCount = 0;
+        let importedCount = 0;
+        const errorMessages: string[] = [];
+
+        json.forEach((row, index) => {
+            if (errorCount > 5) return;
             
-            const header = Object.keys(json[0]);
-            const missingRequiredFields = requiredFields.filter(f => !header.includes(f));
-            if (missingRequiredFields.length > 0) {
-                 toast({
-                    title: "Erro no Cabeçalho",
-                    description: `As seguintes colunas obrigatórias estão faltando: ${missingRequiredFields.join(',')}.`,
-                    variant: "destructive"
-                });
-                setIsImporting(false);
-                return;
+            const isRowEmpty = Object.values(row).every(value => value === null || value === '' || value === undefined);
+            if (isRowEmpty) {
+                return; 
             }
 
-            const batch = writeBatch(db);
-            let errorCount = 0;
-            let importedCount = 0;
-            const errorMessages: string[] = [];
+            const docData: { [key: string]: any } = {};
 
-            json.forEach((row, index) => {
-                if (errorCount > 5) return;
-                
-                // Check if the row is empty
-                const isRowEmpty = Object.values(row).every(value => value === null || value === '' || value === undefined);
-                if (isRowEmpty) {
-                    return; // Skip empty row
+            header.forEach(field => {
+                if (fields.includes(field)) {
+                    docData[field] = row[field] ?? '';
                 }
-
-                const docData: { [key: string]: any } = {};
-
-                header.forEach(field => {
-                    if (fields.includes(field)) {
-                        docData[field] = row[field] ?? '';
-                    }
-                });
-
-                const missingFields = requiredFields.filter(f => !docData[f] && docData[f] !== 0);
-                if (missingFields.length > 0) {
-                    errorCount++;
-                    errorMessages.push(`Linha ${index + 2}: Campos obrigatórios faltando: ${missingFields.join(', ')}`);
-                    return;
-                }
-
-                for (const field of numericFields) {
-                    if (docData[field] && isNaN(Number(docData[field]))) {
-                         errorCount++;
-                         errorMessages.push(`Linha ${index + 2}: Campo ${field} deve ser um número.`);
-                         return;
-                    }
-                     if (docData[field]) {
-                         docData[field] = Number(docData[field]);
-                    } else {
-                        delete docData[field];
-                    }
-                }
-                
-                for (const field in enumFields) {
-                    if (docData[field] && !enumFields[field].includes(docData[field])) {
-                        errorCount++;
-                        errorMessages.push(`Linha ${index + 2}: Valor inválido para ${field}. Use um dos: ${enumFields[field].join(', ')}`);
-                        return;
-                    }
-                }
-                
-                if (collectionName === 'products') {
-                    if (docData.type === 'Produto' && (!docData.stock || !docData.unit)) {
-                        errorCount++;
-                        errorMessages.push(`Linha ${index + 2}: Estoque e Unidade são obrigatórios para 'Produto'`);
-                        return;
-                    }
-                    if(docData.type === 'Serviço') {
-                        delete docData.stock;
-                        delete docData.minStock;
-                        delete docData.unit;
-                    }
-                }
-
-                const docRef = doc(collection(db, collectionName));
-                batch.set(docRef, docData);
-                importedCount++;
             });
 
-            if (errorCount > 0) {
-                toast({
-                    title: `Encontrados ${errorCount} erros no arquivo`,
-                    description: errorMessages.slice(0, 3).join(' | '),
-                    variant: "destructive"
-                });
-                setIsImporting(false);
+            const missingFields = requiredFields.filter(f => !docData[f] && docData[f] !== 0);
+            if (missingFields.length > 0) {
+                errorCount++;
+                errorMessages.push(`Linha ${index + 2}: Campos obrigatórios faltando: ${missingFields.join(', ')}`);
                 return;
             }
+
+            for (const field of numericFields) {
+                if (docData[field] && isNaN(Number(docData[field]))) {
+                      errorCount++;
+                      errorMessages.push(`Linha ${index + 2}: Campo ${field} deve ser um número.`);
+                      return;
+                }
+                  if (docData[field]) {
+                      docData[field] = Number(docData[field]);
+                } else {
+                    delete docData[field];
+                }
+            }
             
-            if (importedCount === 0) {
-                 toast({ title: "Nenhum dado importado", description: "O arquivo não continha dados válidos para importar.", variant: "destructive" });
-                 setIsImporting(false);
-                 return;
+            for (const field in enumFields) {
+                if (docData[field] && !enumFields[field].includes(docData[field])) {
+                    errorCount++;
+                    errorMessages.push(`Linha ${index + 2}: Valor inválido para ${field}. Use um dos: ${enumFields[field].join(', ')}`);
+                    return;
+                }
+            }
+            
+            if (collectionName === 'products') {
+                if (docData.type === 'Produto' && (!docData.stock || !docData.unit)) {
+                    errorCount++;
+                    errorMessages.push(`Linha ${index + 2}: Estoque e Unidade são obrigatórios para 'Produto'`);
+                    return;
+                }
+                if(docData.type === 'Serviço') {
+                    delete docData.stock;
+                    delete docData.minStock;
+                    delete docData.unit;
+                }
             }
 
-            await batch.commit();
+            const docRef = doc(collection(db, collectionName));
+            batch.set(docRef, docData);
+            importedCount++;
+        });
+
+        if (errorCount > 0) {
             toast({
-                title: "Importação Concluída!",
-                description: `${importedCount} registros foram importados com sucesso.`
-            })
-            setSelectedFile(null);
-            setIsOpen(false);
-        } catch (error) {
-             console.error("Error processing file: ", error);
-             toast({ title: "Erro na Importação", description: "Ocorreu um erro ao processar o arquivo.", variant: "destructive" });
-        } finally {
+                title: `Encontrados ${errorCount} erros no arquivo`,
+                description: errorMessages.slice(0, 3).join(' | '),
+                variant: "destructive"
+            });
             setIsImporting(false);
+            return;
         }
-    };
-    reader.onerror = () => {
-        toast({ title: "Erro de Leitura", description: "Não foi possível ler o arquivo selecionado.", variant: "destructive" });
+        
+        if (importedCount === 0) {
+              toast({ title: "Nenhum dado importado", description: "O arquivo não continha dados válidos para importar.", variant: "destructive" });
+              setIsImporting(false);
+              return;
+        }
+
+        await batch.commit();
+        toast({
+            title: "Importação Concluída!",
+            description: `${importedCount} registros foram importados com sucesso.`
+        })
+        setSelectedFile(null);
+        setIsOpen(false);
+    } catch (error) {
+          console.error("Error processing file: ", error);
+          toast({ title: "Erro na Importação", description: "Ocorreu um erro ao processar o arquivo. Verifique o formato e o conteúdo.", variant: "destructive" });
+    } finally {
         setIsImporting(false);
     }
-    reader.readAsArrayBuffer(selectedFile);
   }
 
 
