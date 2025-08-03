@@ -34,12 +34,13 @@ export function ProductsTable() {
         <div className="flex items-center justify-end gap-2">
             <BulkImportSheet
               collectionName="products"
-              fields={['code', 'name', 'description', 'barcode', 'type', 'costPrice', 'sellPrice', 'stock', 'minStock', 'unit']}
-              requiredFields={['code', 'name', 'type', 'costPrice', 'sellPrice']}
+              fields={['code', 'name', 'description', 'barcode', 'group', 'type', 'costPrice', 'sellPrice', 'stock', 'minStock', 'unit']}
+              requiredFields={['code', 'name', 'type', 'group', 'costPrice', 'sellPrice']}
               numericFields={['costPrice', 'sellPrice', 'stock', 'minStock']}
               enumFields={{ 
                   'unit': ['un', 'kg', 'L', 'm'],
-                  'type': ['Produto', 'Serviço']
+                  'type': ['Produto', 'Serviço'],
+                  'group': ['ACESSÓRIO', 'PARTES', 'PEÇAS', 'PNEUMÁTICOS', 'RELAÇÃO', 'SERVIÇO']
               }}
              />
             <NewProductSheet />
@@ -50,6 +51,7 @@ export function ProductsTable() {
             <TableRow>
               <TableHead>Código</TableHead>
               <TableHead>Nome</TableHead>
+              <TableHead>Grupo</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Preço Venda</TableHead>
               <TableHead>Estoque</TableHead>
@@ -60,6 +62,7 @@ export function ProductsTable() {
               <TableRow key={product.id}>
                 <TableCell className="font-mono text-xs">{product.code}</TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell>{product.group}</TableCell>
                 <TableCell>
                     <Badge variant={product.type === 'Produto' ? 'secondary' : 'outline'}>{product.type}</Badge>
                 </TableCell>

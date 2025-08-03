@@ -16,6 +16,7 @@ export type Product = {
   description: string;
   barcode?: string;
   type: 'Produto' | 'Serviço';
+  group: 'ACESSÓRIO' | 'PARTES' | 'PEÇAS' | 'PNEUMÁTICOS' | 'RELAÇÃO' | 'SERVIÇO' | string;
   costPrice: number;
   sellPrice: number;
   stock?: number;

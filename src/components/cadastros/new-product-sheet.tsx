@@ -26,12 +26,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group"
 
+const productGroups = ['ACESSÓRIO', 'PARTES', 'PEÇAS', 'PNEUMÁTICOS', 'RELAÇÃO', 'SERVIÇO'] as const;
+
 const productSchema = z.object({
   code: z.string().min(1, "Código é obrigatório"),
   name: z.string().min(1, "Nome é obrigatório"),
   description: z.string(),
   barcode: z.string().optional(),
   type: z.enum(["Produto", "Serviço"], { required_error: "Tipo é obrigatório" }),
+  group: z.string().min(1, "Grupo é obrigatório"),
   costPrice: z.coerce.number().positive("Deve ser um número positivo"),
   sellPrice: z.coerce.number().positive("Deve ser um número positivo"),
   stock: z.coerce.number().int("Deve ser um número inteiro").optional(),
@@ -76,6 +79,7 @@ export function NewProductSheet() {
       name: "",
       description: "",
       barcode: "",
+      group: "",
       costPrice: undefined,
       sellPrice: undefined,
       stock: undefined,
@@ -167,13 +171,34 @@ export function NewProductSheet() {
               )} />
             </div>
 
-            <FormField name="barcode" control={form.control} render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código de Barras (Opcional)</FormLabel>
-                  <FormControl><Input placeholder="Ex: 7891234567890" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField name="barcode" control={form.control} render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Código de Barras (Opcional)</FormLabel>
+                    <FormControl><Input placeholder="Ex: 7891234567890" {...field} /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )} />
+                <FormField name="group" control={form.control} render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Grupo</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Selecione um grupo" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {productGroups.map(group => (
+                                    <SelectItem key={group} value={group}>{group}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+             </div>
+
 
             <FormField name="description" control={form.control} render={({ field }) => (
               <FormItem>
