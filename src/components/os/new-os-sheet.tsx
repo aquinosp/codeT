@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Plus, Trash2, Printer, ChevronDown } from "lucide-react"
@@ -284,8 +285,9 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
               )}
               <div className="space-y-2">
                 {fields.map((field, index) => {
-                  const item = watchedItems[index]
-                  const total = (item.quantity || 0) * (item.unitPrice || 0)
+                  const item = watchedItems[index];
+                  if (!item) return null;
+                  const total = (item.quantity || 0) * (item.unitPrice || 0);
                   return (
                   <div key={field.id} className="grid grid-cols-[2fr,80px,120px,120px,auto] gap-2 items-start">
                     <FormField
