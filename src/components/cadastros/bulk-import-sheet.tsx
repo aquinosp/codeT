@@ -77,17 +77,25 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
 
             const batch = writeBatch(db);
             let errorCount = 0;
+            let importedCount = 0;
             const errorMessages: string[] = [];
 
             json.forEach((row, index) => {
                 if (errorCount > 5) return;
+                
+                // Check if the row is empty
+                const isRowEmpty = Object.values(row).every(value => value === null || value === '' || value === undefined);
+                if (isRowEmpty) {
+                    return; // Skip empty row
+                }
+
                 const docData: { [key: string]: any } = {};
 
                 fields.forEach(field => {
                     docData[field] = row[field] ?? '';
                 });
 
-                const missingFields = requiredFields.filter(f => !docData[f]);
+                const missingFields = requiredFields.filter(f => !docData[f] && docData[f] !== 0);
                 if (missingFields.length > 0) {
                     errorCount++;
                     errorMessages.push(`Linha ${index + 2}: Campos obrigatórios faltando: ${missingFields.join(', ')}`);
@@ -130,6 +138,7 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
 
                 const docRef = doc(collection(db, collectionName));
                 batch.set(docRef, docData);
+                importedCount++;
             });
 
             if (errorCount > 0) {
@@ -141,11 +150,17 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
                 setIsImporting(false);
                 return;
             }
+            
+            if (importedCount === 0) {
+                 toast({ title: "Nenhum dado importado", description: "O arquivo não continha dados válidos para importar.", variant: "destructive" });
+                 setIsImporting(false);
+                 return;
+            }
 
             await batch.commit();
             toast({
                 title: "Importação Concluída!",
-                description: `${json.length} registros foram importados com sucesso.`
+                description: `${importedCount} registros foram importados com sucesso.`
             })
             setSelectedFile(null);
             setIsOpen(false);
@@ -185,6 +200,7 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
                 <div className="font-mono bg-muted p-2 rounded-md whitespace-pre-wrap mt-2">
                     {fields.join(', ')}
                 </div>
+                 <p className="mt-2">Campos obrigatórios: {requiredFields.join(', ')}</p>
               </AlertDescription>
            </Alert>
            <div className="grid gap-2 flex-1">

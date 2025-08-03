@@ -34,7 +34,7 @@ export function ProductsTable() {
             <BulkImportSheet
               collectionName="products"
               fields={['code', 'name', 'description', 'type', 'costPrice', 'sellPrice', 'stock', 'minStock', 'unit']}
-              requiredFields={['code', 'name', 'type', 'sellPrice']}
+              requiredFields={['code', 'name', 'type', 'costPrice', 'sellPrice']}
               numericFields={['costPrice', 'sellPrice', 'stock', 'minStock']}
               enumFields={{ 
                   'unit': ['un', 'kg', 'L', 'm'],
