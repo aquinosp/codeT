@@ -15,7 +15,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { NewPurchaseSheet } from "./new-purchase-sheet"
 import { useEffect, useState } from "react"
 import type { Purchase } from "@/lib/types"
-import { collection, getDocs, doc, getDoc } from "firebase/firestore"
+import { collection, getDocs, doc, getDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 async function fetchPurchases(): Promise<Purchase[]> {
@@ -31,7 +31,7 @@ async function fetchPurchases(): Promise<Purchase[]> {
             ...p,
             supplier: { id: supplierDoc.id, ...supplierDoc.data() },
             item: { id: itemDoc.id, ...itemDoc.data() },
-            paymentDate: p.paymentDate.toDate(),
+            paymentDate: (p.paymentDate as Timestamp).toDate(),
         } as Purchase;
     }));
 
