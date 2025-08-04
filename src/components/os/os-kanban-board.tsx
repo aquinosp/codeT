@@ -151,7 +151,7 @@ export function OsKanbanBoard() {
                     <p className="text-sm font-medium">{order.customer.name}</p>
                     <p className="text-sm text-muted-foreground truncate">{order.description}</p>
                     <div className="mt-2 flex justify-between items-center">
-                       <Badge variant="outline">{order.technician}</Badge>
+                       <Badge variant="secondary">{order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Badge>
                        {order.status !== 'Entregue' && order.status !== 'Pronta' && <SlaTimer date={order.createdAt} />}
                     </div>
                   </CardContent>
