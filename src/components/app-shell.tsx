@@ -1,3 +1,4 @@
+
 "use client"
 
 import {
@@ -16,9 +17,15 @@ import { Button } from '@/components/ui/button';
 import { Menu, LogOut, Settings, Bell, Search } from 'lucide-react';
 import { Input } from './ui/input';
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+interface AppShellProps {
+    children: React.ReactNode;
+    sidebarOpen?: boolean;
+    onSidebarOpenChange?: (open: boolean) => void;
+}
+
+export default function AppShell({ children, sidebarOpen, onSidebarOpenChange }: AppShellProps) {
   return (
-    <SidebarProvider>
+    <SidebarProvider open={sidebarOpen} onOpenChange={onSidebarOpenChange}>
       <div className="flex min-h-screen bg-background">
         <Sidebar side="left" collapsible="icon" variant="sidebar">
           <SidebarHeader>
