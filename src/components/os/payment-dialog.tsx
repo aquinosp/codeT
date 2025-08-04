@@ -32,7 +32,7 @@ export function PaymentDialog({ order, onOpenChange, onConfirm }: PaymentDialogP
     <AlertDialog open onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="font-headline">Concluir e Registrar Pagamento</AlertDialogTitle>
+          <AlertDialogTitle className="font-headline">Registrar Entrega e Pagamento</AlertDialogTitle>
           <AlertDialogDescription>
             Selecione a forma de pagamento para a OS <span className="font-bold">{order.osNumber}</span> no valor de {order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}.
           </AlertDialogDescription>

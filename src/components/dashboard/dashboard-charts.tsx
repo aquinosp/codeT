@@ -37,6 +37,10 @@ const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
     'Aguardando Peças': {
       label: "Aguardando Peças",
       color: "hsl(var(--chart-5))"
+    },
+    'Pronta': {
+      label: "Pronta",
+      color: "hsl(var(--chart-3))"
     }
 };
 

@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import type { ServiceOrder, ServiceOrderDocument } from "@/lib/types"
@@ -24,12 +25,15 @@ import { PaymentDialog } from "./payment-dialog"
 import { NewOsSheet } from "./new-os-sheet"
 import { collection, onSnapshot, doc, getDoc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { useToast } from "@/hooks/use-toast"
 
 
 function getStatusVariant(status: ServiceOrder['status']) {
   switch (status) {
-    case 'Concluído':
+    case 'Entregue':
       return 'default'
+    case 'Pronta':
+      return 'secondary'
     case 'Em Progresso':
       return 'secondary'
     case 'Aguardando Peças':
@@ -68,6 +72,7 @@ function SlaTimer({ date }: { date: Date }) {
 export function OsTable() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "serviceOrders"), async (snapshot) => {
@@ -111,14 +116,16 @@ export function OsTable() {
     return () => unsubscribe();
   }, []);
 
-  const handleComplete = (order: ServiceOrder) => {
-    setSelectedOrder(order);
+  const handleMarkAsReady = async (order: ServiceOrder) => {
+    const orderRef = doc(db, "serviceOrders", order.id);
+    await updateDoc(orderRef, { status: 'Pronta' });
+    toast({ title: "Status Atualizado!", description: `A OS ${order.osNumber} foi marcada como pronta.`})
   }
 
   const handlePayment = async (method: 'PIX' | 'Cartão' | 'Dinheiro') => {
     if (selectedOrder) {
       const orderRef = doc(db, "serviceOrders", selectedOrder.id);
-      await updateDoc(orderRef, { status: 'Concluído', paymentMethod: method });
+      await updateDoc(orderRef, { status: 'Entregue', paymentMethod: method });
     }
     setSelectedOrder(null)
   }
@@ -146,7 +153,7 @@ export function OsTable() {
                   <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                 </TableCell>
                 <TableCell>
-                  {order.status !== 'Concluído' ? <SlaTimer date={order.createdAt} /> : '-'}
+                  {order.status !== 'Entregue' && order.status !== 'Pronta' ? <SlaTimer date={order.createdAt} /> : '-'}
                 </TableCell>
                 <TableCell className="text-right">
                   {order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -163,7 +170,9 @@ export function OsTable() {
                       <DropdownMenuLabel>Ações</DropdownMenuLabel>
                       <NewOsSheet isEditing order={order} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
                       <DropdownMenuItem onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleComplete(order)}>Concluir</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleMarkAsReady(order)} disabled={order.status === 'Pronta' || order.status === 'Entregue'}>Marcar como Pronta</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSelectedOrder(order)} disabled={order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

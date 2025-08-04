@@ -12,28 +12,33 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { PaymentDialog } from './payment-dialog';
 import { NewOsSheet } from './new-os-sheet';
 import { collection, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+
 
 type Status = ServiceOrder['status'];
 
-const columns: Status[] = ['Pendente', 'Em Progresso', 'Aguardando Peças', 'Concluído'];
+const columns: Status[] = ['Pendente', 'Em Progresso', 'Aguardando Peças', 'Pronta', 'Entregue'];
 const columnTitles: Record<Status, string> = {
   'Pendente': 'Pendente',
   'Em Progresso': 'Em Progresso',
   'Aguardando Peças': 'Aguardando Peças',
-  'Concluído': 'Concluído',
+  'Pronta': 'Pronta',
+  'Entregue': 'Entregue',
 };
 
 const columnColors: Record<Status, string> = {
     'Pendente': 'bg-blue-100 dark:bg-blue-900/40',
     'Em Progresso': 'bg-yellow-100 dark:bg-yellow-900/40',
     'Aguardando Peças': 'bg-orange-100 dark:bg-orange-900/40',
-    'Concluído': 'bg-green-100 dark:bg-green-900/40',
+    'Pronta': 'bg-purple-100 dark:bg-purple-900/40',
+    'Entregue': 'bg-green-100 dark:bg-green-900/40',
 };
 
 function SlaTimer({ date }: { date: Date }) {
@@ -63,6 +68,7 @@ export function OsKanbanBoard() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
   const [paymentOrder, setPaymentOrder] = useState<ServiceOrder | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "serviceOrders"), async (snapshot) => {
@@ -122,7 +128,7 @@ export function OsKanbanBoard() {
     setDraggedOrder(null);
     const order = orders.find(o => o.id === orderId);
     
-    if (order && newStatus === 'Concluído' && order.status !== 'Concluído') {
+    if (order && newStatus === 'Entregue' && order.status !== 'Entregue') {
         setPaymentOrder(order);
     } else if (order) {
         const orderRef = doc(db, "serviceOrders", orderId);
@@ -133,14 +139,21 @@ export function OsKanbanBoard() {
   const handlePaymentConfirm = async (method: ServiceOrder['paymentMethod']) => {
     if(paymentOrder){
        const orderRef = doc(db, "serviceOrders", paymentOrder.id);
-       await updateDoc(orderRef, { status: 'Concluído', paymentMethod: method });
+       await updateDoc(orderRef, { status: 'Entregue', paymentMethod: method });
     }
     setPaymentOrder(null);
   }
 
+  const handleSetStatus = async (orderId: string, status: Status) => {
+    const orderRef = doc(db, "serviceOrders", orderId);
+    await updateDoc(orderRef, { status });
+    toast({ title: "Status Atualizado!", description: `A OS foi movida para ${status}.`})
+  }
+
+
   return (
     <>
-    <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
       {columns.map(status => (
         <div
           key={status}
@@ -170,7 +183,9 @@ export function OsKanbanBoard() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <NewOsSheet isEditing order={order} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
-                        {order.status !== 'Concluído' && <DropdownMenuItem onClick={() => setPaymentOrder(order)}>Concluir</DropdownMenuItem>}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleSetStatus(order.id, 'Pronta')}>Marcar como Pronta</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setPaymentOrder(order)}>Registrar Entrega</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </CardHeader>
@@ -179,7 +194,7 @@ export function OsKanbanBoard() {
                     <p className="text-sm text-muted-foreground truncate">{order.description}</p>
                     <div className="mt-2 flex justify-between items-center">
                        <Badge variant="outline">{order.technician}</Badge>
-                       {order.status !== 'Concluído' && <SlaTimer date={order.createdAt} />}
+                       {order.status !== 'Entregue' && order.status !== 'Pronta' && <SlaTimer date={order.createdAt} />}
                     </div>
                   </CardContent>
                 </Card>

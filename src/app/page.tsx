@@ -28,10 +28,10 @@ async function getDashboardData() {
 
   // Metrics
   const monthlyRevenue = serviceOrders
-    .filter(o => o.status === 'Concluído' && o.createdAt.toDate() >= startOfMonth && o.createdAt.toDate() <= endOfMonth)
+    .filter(o => o.status === 'Entregue' && o.createdAt.toDate() >= startOfMonth && o.createdAt.toDate() <= endOfMonth)
     .reduce((acc, o) => acc + o.total, 0);
 
-  const openServiceOrders = serviceOrders.filter(o => o.status !== 'Concluído').length;
+  const openServiceOrders = serviceOrders.filter(o => o.status !== 'Entregue').length;
 
   const newCustomers = people.filter(p => p.type === 'Cliente' && p.createdAt && p.createdAt.toDate() >= startOfMonth && p.createdAt.toDate() <= endOfMonth).length;
 
@@ -45,7 +45,7 @@ async function getDashboardData() {
 
   // Chart Data
   const osStatusData = serviceOrders
-    .filter(o => o.status !== 'Concluído' && (o.status === 'Pendente' || o.status === 'Em Progresso' || o.status === 'Aguardando Peças'))
+    .filter(o => o.status !== 'Entregue')
     .reduce((acc, o) => {
       const status = o.status;
       const existing = acc.find(item => item.status === status);
@@ -59,7 +59,7 @@ async function getDashboardData() {
 
 
   const revenueByMonth = serviceOrders
-    .filter(o => o.status === 'Concluído')
+    .filter(o => o.status === 'Entregue')
     .reduce((acc, o) => {
         const month = o.createdAt.toDate().toLocaleString('default', { month: 'short' });
         const existing = acc.find(item => item.month === month);
