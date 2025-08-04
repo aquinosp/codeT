@@ -93,11 +93,12 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
         const lastOsNumber = querySnapshot.docs[0].data().osNumber;
-        const lastNumber = parseInt(lastOsNumber.split('-')[1]);
-        const newOsNumber = `OS-${(lastNumber + 1).toString().padStart(3, '0')}`;
+        const lastNumber = parseInt(lastOsNumber?.split('-')[1] || '0', 10);
+        const newNumber = isNaN(lastNumber) ? 1 : lastNumber + 1;
+        const newOsNumber = `OS-${newNumber.toString().padStart(4, '0')}`;
         form.setValue("osNumber", newOsNumber);
       } else {
-        form.setValue("osNumber", "OS-001");
+        form.setValue("osNumber", "OS-0001");
       }
     }
   };
