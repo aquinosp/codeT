@@ -26,7 +26,7 @@ import { NewOsSheet } from "./new-os-sheet"
 import { doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useToast } from "@/hooks/use-toast"
-import { useServiceOrders } from "@/hooks/useServiceOrders"
+import { useServiceOrders } from '@/hooks/useServiceOrders';
 
 
 function getStatusVariant(status: ServiceOrder['status']) {
