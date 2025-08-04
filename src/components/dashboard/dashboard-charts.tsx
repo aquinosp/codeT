@@ -1,9 +1,11 @@
 
+
 "use client"
 
 import type { ComponentProps } from "react"
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell } from "recharts"
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList } from "recharts"
 import { DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 
 import {
   Card,
@@ -18,6 +20,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart"
+import { Button } from "../ui/button"
 
 const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
     revenue: {
@@ -45,6 +48,8 @@ const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
     }
 };
 
+export type Period = 'today' | 'week' | 'month' | 'year';
+
 interface DashboardChartsProps {
     monthlyRevenue: number;
     openServiceOrders: number;
@@ -52,6 +57,40 @@ interface DashboardChartsProps {
     monthlyPurchases: number;
     osStatusData: { status: string; count: number, name: string }[];
     revenueByMonth: { month: string, revenue: number }[];
+    period: Period;
+}
+
+const periodLabels: Record<Period, string> = {
+  today: 'Hoje',
+  week: 'Semana',
+  month: 'Mês',
+  year: 'Ano',
+};
+
+function DateFilter({ currentPeriod }: { currentPeriod: Period }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handlePeriodChange = (period: Period) => {
+    const params = new URLSearchParams();
+    params.set('period', period);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      {(['today', 'week', 'month', 'year'] as Period[]).map((period) => (
+        <Button
+          key={period}
+          variant={currentPeriod === period ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => handlePeriodChange(period)}
+        >
+          {periodLabels[period]}
+        </Button>
+      ))}
+    </div>
+  );
 }
 
 
@@ -61,20 +100,22 @@ export function DashboardCharts({
     newCustomers,
     monthlyPurchases,
     osStatusData,
-    revenueByMonth
+    revenueByMonth,
+    period
 }: DashboardChartsProps) {
   return (
     <>
+        <DateFilter currentPeriod={period} />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-primary text-primary-foreground">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Receita Total (Mês)</CardTitle>
+              <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
               <DollarSign className="h-5 w-5 text-primary-foreground/80" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{monthlyRevenue.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
               <p className="text-xs text-primary-foreground/80">
-                Total para o mês atual
+                Total para o período selecionado
               </p>
             </CardContent>
           </Card>
@@ -98,19 +139,19 @@ export function DashboardCharts({
             <CardContent>
               <div className="text-3xl font-bold">+{newCustomers}</div>
               <p className="text-xs text-muted-foreground">
-                Neste mês
+                No período selecionado
               </p>
             </CardContent>
           </Card>
            <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Compras (Mês)</CardTitle>
+              <CardTitle className="text-sm font-medium">Compras</CardTitle>
               <ShoppingCart className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{monthlyPurchases.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
                <p className="text-xs text-muted-foreground">
-                Total de despesas com peças
+                Total de despesas no período
               </p>
             </CardContent>
           </Card>
@@ -166,28 +207,17 @@ export function DashboardCharts({
                       nameKey="name"
                       innerRadius={60}
                       strokeWidth={2}
-                      labelLine={false}
-                      label={({
-                          payload,
-                          ...props
-                      }) => {
-                          return (
-                          <text
-                              x={props.x}
-                              y={props.y}
-                              textAnchor={props.textAnchor}
-                              dominantBaseline={props.dominantBaseline}
-                              fill="hsl(var(--foreground))"
-                              className="text-sm font-bold"
-                          >
-                              {payload.count}
-                          </text>
-                          )
-                      }}
                     >
                       {osStatusData.map((entry) => (
                           <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name]?.color} />
                       ))}
+                      <LabelList
+                          dataKey="count"
+                          position="outside"
+                          offset={12}
+                          className="fill-foreground text-sm font-medium"
+                          formatter={(value: number) => value.toLocaleString()}
+                      />
                     </Pie>
                     <ChartLegend content={<ChartLegendContent nameKey="name" />} />
                   </PieChart>
