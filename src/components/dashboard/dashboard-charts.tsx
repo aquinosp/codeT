@@ -1,3 +1,4 @@
+
 "use client"
 
 import type { ComponentProps } from "react"
@@ -177,9 +178,9 @@ export function DashboardCharts({
                               textAnchor={props.textAnchor}
                               dominantBaseline={props.dominantBaseline}
                               fill="hsl(var(--foreground))"
-                              className="text-sm"
+                              className="text-sm font-bold"
                           >
-                              {`${payload.name} (${payload.count})`}
+                              {payload.count}
                           </text>
                           )
                       }}
@@ -188,6 +189,7 @@ export function DashboardCharts({
                           <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name]?.color} />
                       ))}
                     </Pie>
+                    <ChartLegend content={<ChartLegendContent nameKey="name" />} />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
