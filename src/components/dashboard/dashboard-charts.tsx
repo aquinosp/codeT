@@ -1,7 +1,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell } from "recharts"
 import { DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
 
 import {
@@ -163,15 +163,31 @@ export function DashboardCharts({
                       data={osStatusData}
                       dataKey="count"
                       nameKey="name"
-                      innerRadius={50}
+                      innerRadius={60}
                       strokeWidth={2}
-                      cy="40%"
-                      paddingAngle={4}
-                    />
-                    <ChartLegend
-                      content={<ChartLegendContent nameKey="name" />}
-                      className="flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-                    />
+                      labelLine={false}
+                      label={({
+                          payload,
+                          ...props
+                      }) => {
+                          return (
+                          <text
+                              x={props.x}
+                              y={props.y}
+                              textAnchor={props.textAnchor}
+                              dominantBaseline={props.dominantBaseline}
+                              fill="hsl(var(--foreground))"
+                              className="text-sm"
+                          >
+                              {`${payload.name} (${payload.count})`}
+                          </text>
+                          )
+                      }}
+                    >
+                      {osStatusData.map((entry) => (
+                          <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name]?.color} />
+                      ))}
+                    </Pie>
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
