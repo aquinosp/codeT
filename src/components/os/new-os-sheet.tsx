@@ -419,22 +419,22 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
               <SheetClose asChild>
                 <Button variant="outline">Cancelar</Button>
               </SheetClose>
-               <DropdownMenu>
-                <div className="flex rounded-md">
-                  <Button type="submit" className="rounded-r-none">Salvar</Button>
-                  <DropdownMenuTrigger asChild>
-                    <Button type="button" size="icon" className="w-8 rounded-l-none border-l">
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                </div>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={form.handleSubmit(onSaveAndPrint)}>
-                    <Printer className="mr-2 h-4 w-4" />
-                    Salvar e Imprimir
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex">
+                  <Button type="submit">Salvar</Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" size="icon" variant="default" className="w-8 rounded-l-none border-l border-primary-foreground/20">
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={form.handleSubmit(onSaveAndPrint)}>
+                        <Printer className="mr-2 h-4 w-4" />
+                        Salvar e Imprimir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+              </div>
             </SheetFooter>
           </form>
         </Form>
