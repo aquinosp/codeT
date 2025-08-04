@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { Plus, Trash2, Printer, ChevronDown } from "lucide-react"
@@ -149,7 +150,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     return acc + (price * quantity);
   }, 0);
 
-  const totalValue = subTotal - (watchedDiscount || 0) + (watchedSurcharge || 0);
+  const totalValue = subTotal - Number(watchedDiscount || 0) + Number(watchedSurcharge || 0);
 
   const handleProductChange = (productId: string, index: number) => {
     const product = products.find(p => p.id === productId);
