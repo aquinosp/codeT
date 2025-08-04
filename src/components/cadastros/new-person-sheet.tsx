@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Plus } from "lucide-react"
-import { addDoc, collection, Timestamp } from "firebase/firestore"
+import { addDoc, collection, doc, Timestamp, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 import {
@@ -22,7 +22,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import type { Person } from "@/lib/types"
 
 const personSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -32,7 +33,13 @@ const personSchema = z.object({
   type: z.enum(["Cliente", "Fornecedor", "Funcionário"], { required_error: "Tipo é obrigatório" }),
 })
 
-export function NewPersonSheet() {
+interface NewPersonSheetProps {
+  isEditing?: boolean;
+  person?: Person;
+  trigger?: React.ReactNode;
+}
+
+export function NewPersonSheet({ isEditing = false, person, trigger }: NewPersonSheetProps) {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false);
 
@@ -47,33 +54,56 @@ export function NewPersonSheet() {
     },
   })
 
+  useEffect(() => {
+    if (isEditing && person) {
+      form.reset(person);
+    } else {
+      form.reset({
+        type: "Cliente",
+        name: "",
+        phone: "",
+        email: "",
+        cpfCnpj: "",
+      });
+    }
+  }, [isEditing, person, form, isOpen]);
+
+
   async function onSubmit(values: z.infer<typeof personSchema>) {
     try {
-      const personData = {
-        ...values,
-        createdAt: Timestamp.now()
+      if (isEditing && person) {
+        const personRef = doc(db, "people", person.id);
+        await updateDoc(personRef, values);
+        toast({ title: "Pessoa Atualizada", description: `Os dados de ${values.name} foram atualizados.` });
+      } else {
+        const personData = {
+          ...values,
+          createdAt: Timestamp.now()
+        }
+        await addDoc(collection(db, "people"), personData);
+        toast({ title: "Pessoa Salva", description: `A pessoa ${values.name} foi salva com sucesso.` })
       }
-      await addDoc(collection(db, "people"), personData);
-      toast({ title: "Pessoa Salva", description: `A pessoa ${values.name} foi salva com sucesso.` })
       form.reset()
       setIsOpen(false);
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error saving document: ", error);
       toast({ title: "Erro", description: "Ocorreu um erro ao salvar a pessoa.", variant: "destructive" });
     }
   }
+  
+  const title = isEditing ? 'Editar Pessoa' : 'Nova Pessoa';
+  const description = isEditing ? 'Atualize os dados da pessoa selecionada.' : 'Adicione um novo cliente, fornecedor ou funcionário.';
+
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button onClick={() => setIsOpen(true)}><Plus className="-ml-1 h-4 w-4" /> Nova Pessoa</Button>
+      <SheetTrigger asChild onClick={() => setIsOpen(true)}>
+        {trigger || <Button><Plus className="-ml-1 h-4 w-4" /> Nova Pessoa</Button>}
       </SheetTrigger>
       <SheetContent className="sm:max-w-lg w-full flex flex-col">
         <SheetHeader>
-          <SheetTitle className="font-headline">Nova Pessoa</SheetTitle>
-          <SheetDescription>
-            Adicione um novo cliente, fornecedor ou funcionário.
-          </SheetDescription>
+          <SheetTitle className="font-headline">{title}</SheetTitle>
+          <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col gap-4 overflow-y-auto pr-6">
