@@ -277,17 +277,19 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Cliente</FormLabel>
-                  <div className="flex gap-2">
                      <Combobox
                         options={customerOptions}
                         value={field.value}
                         onChange={field.onChange}
                         placeholder="Selecione um cliente"
                         searchPlaceholder="Pesquisar cliente..."
-                        notFoundText="Nenhum cliente encontrado."
+                        notFoundText={
+                          <div className="flex flex-col items-center text-center p-2">
+                            <p className="text-sm text-muted-foreground">Essa pessoa não está no banco de dados.</p>
+                            <NewPersonSheet />
+                          </div>
+                        }
                       />
-                     <NewPersonSheet />
-                  </div>
                   <FormMessage />
                 </FormItem>
               )}

@@ -26,7 +26,7 @@ interface ComboboxProps {
     onChange: (value: string) => void;
     placeholder?: string;
     searchPlaceholder?: string;
-    notFoundText?: string;
+    notFoundText?: React.ReactNode;
     className?: string;
 }
 
@@ -96,5 +96,3 @@ export function Combobox({
     </Popover>
   )
 }
-
-    
