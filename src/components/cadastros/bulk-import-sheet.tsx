@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Upload } from "lucide-react"
-import { doc, collection, writeBatch } from "firebase/firestore"
+import { doc, collection, writeBatch, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import * as XLSX from 'xlsx';
 
@@ -104,6 +104,10 @@ export function BulkImportSheet({ collectionName, fields, requiredFields, numeri
                     docData[field] = row[field] ?? '';
                 }
             });
+            
+            if (collectionName === 'people') {
+                docData.createdAt = Timestamp.now();
+            }
 
             const missingFields = requiredFields.filter(f => !docData[f] && docData[f] !== 0);
             if (missingFields.length > 0) {

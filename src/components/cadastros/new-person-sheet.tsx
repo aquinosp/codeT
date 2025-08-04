@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Plus } from "lucide-react"
-import { addDoc, collection } from "firebase/firestore"
+import { addDoc, collection, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 import {
@@ -49,7 +49,11 @@ export function NewPersonSheet() {
 
   async function onSubmit(values: z.infer<typeof personSchema>) {
     try {
-      await addDoc(collection(db, "people"), values);
+      const personData = {
+        ...values,
+        createdAt: Timestamp.now()
+      }
+      await addDoc(collection(db, "people"), personData);
       toast({ title: "Pessoa Salva", description: `A pessoa ${values.name} foi salva com sucesso.` })
       form.reset()
       setIsOpen(false);

@@ -1,15 +1,15 @@
-"use client"
-
 import type { ComponentProps } from "react"
-import { Bar, BarChart, Line, LineChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
+import { collection, getDocs, query, Timestamp } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import type { ServiceOrderDocument, Purchase, Person } from "@/lib/types"
 
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
 import {
   ChartContainer,
@@ -20,54 +20,113 @@ import {
 } from "@/components/ui/chart"
 import AppShell from "@/components/app-shell"
 
-const osData = [
-  { status: "Concluído", count: 25, fill: "var(--color-concluido)" },
-  { status: "Em Progresso", count: 12, fill: "var(--color-em_progresso)" },
-  { status: "Aguardando", count: 8, fill: "var(--color-aguardando)" },
-];
-
-const revenueData = [
-    { month: "Jan", revenue: 4200, expenses: 2000 },
-    { month: "Feb", revenue: 5100, expenses: 2500 },
-    { month: "Mar", revenue: 5500, expenses: 3000 },
-    { month: "Apr", revenue: 4800, expenses: 2800 },
-    { month: "May", revenue: 6200, expenses: 3500 },
-    { month: "Jun", revenue: 7800, expenses: 4000 },
-    { month: "Jul", revenue: 7100, expenses: 3800 },
-    { month: "Aug", revenue: 8200, expenses: 4500 },
-    { month: "Sep", revenue: 8900, expenses: 4800 },
-    { month: "Oct", revenue: 9500, expenses: 5000 },
-    { month: "Nov", revenue: 9100, expenses: 5200 },
-    { month: "Dec", revenue: 10500, expenses: 6000 },
-];
-
 const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
     revenue: {
         label: "Receita",
         color: "hsl(var(--chart-1))",
     },
-    expenses: {
-        label: "Despesas",
-        color: "hsl(var(--chart-2))",
-    },
     count: {
         label: "OS",
     },
-    concluido: {
-      label: "Concluído",
+    Pendente: {
+      label: "Pendente",
       color: "hsl(var(--chart-1))"
     },
-    em_progresso: {
+    'Em Progresso': {
       label: "Em Progresso",
       color: "hsl(var(--chart-2))"
     },
-    aguardando: {
-      label: "Aguardando",
+    'Aguardando Peças': {
+      label: "Aguardando Peças",
       color: "hsl(var(--chart-5))"
     }
 };
 
-export default function DashboardPage() {
+async function getDashboardData() {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  // Queries
+  const soQuery = collection(db, "serviceOrders");
+  const peopleQuery = collection(db, "people");
+  const purchasesQuery = collection(db, "purchases");
+
+  const [soSnapshot, peopleSnapshot, purchasesSnapshot] = await Promise.all([
+    getDocs(soQuery),
+    getDocs(peopleQuery),
+    getDocs(purchasesQuery),
+  ]);
+
+  const serviceOrders = soSnapshot.docs.map(doc => ({ ...doc.data() as ServiceOrderDocument, id: doc.id }));
+  const people = peopleSnapshot.docs.map(doc => ({ ...doc.data() as Person, id: doc.id }));
+  const purchases = purchasesSnapshot.docs.map(doc => ({ ...doc.data() as Purchase, id: doc.id }));
+
+  // Metrics
+  const monthlyRevenue = serviceOrders
+    .filter(o => o.status === 'Concluído' && o.createdAt.toDate() >= startOfMonth && o.createdAt.toDate() <= endOfMonth)
+    .reduce((acc, o) => acc + o.total, 0);
+
+  const openServiceOrders = serviceOrders.filter(o => o.status !== 'Concluído').length;
+
+  const newCustomers = people.filter(p => p.type === 'Cliente' && p.createdAt && p.createdAt.toDate() >= startOfMonth && p.createdAt.toDate() <= endOfMonth).length;
+
+  const monthlyPurchases = purchases
+    .filter(p => {
+        if (!p.paymentDate) return false;
+        const paymentDate = new Date(p.paymentDate);
+        return paymentDate >= startOfMonth && paymentDate <= endOfMonth;
+    })
+    .reduce((acc, p) => acc + p.total, 0);
+
+  // Chart Data
+  const osStatusData = serviceOrders
+    .filter(o => o.status !== 'Concluído')
+    .reduce((acc, o) => {
+      const status = o.status;
+      const existing = acc.find(item => item.status === status);
+      if (existing) {
+        existing.count++;
+      } else {
+        acc.push({ status, count: 1, fill: `var(--color-${status.replace(' ', '_')})` });
+      }
+      return acc;
+    }, [] as { status: string; count: number; fill: string }[]);
+
+
+  const revenueByMonth = serviceOrders
+    .filter(o => o.status === 'Concluído')
+    .reduce((acc, o) => {
+        const month = o.createdAt.toDate().toLocaleString('default', { month: 'short' });
+        const existing = acc.find(item => item.month === month);
+        if(existing) {
+            existing.revenue += o.total;
+        } else {
+            acc.push({ month, revenue: o.total });
+        }
+        return acc;
+    }, [] as { month: string, revenue: number }[]);
+
+  return {
+    monthlyRevenue,
+    openServiceOrders,
+    newCustomers,
+    monthlyPurchases,
+    osStatusData,
+    revenueByMonth
+  }
+}
+
+export default async function DashboardPage() {
+  const { 
+    monthlyRevenue,
+    openServiceOrders,
+    newCustomers,
+    monthlyPurchases,
+    osStatusData,
+    revenueByMonth
+  } = await getDashboardData();
+  
   return (
     <AppShell>
       <div className="flex flex-col gap-6 p-4 sm:p-6 md:p-8">
@@ -81,9 +140,9 @@ export default function DashboardPage() {
               <DollarSign className="h-5 w-5 text-primary-foreground/80" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">R$ 45.231,89</div>
+              <div className="text-3xl font-bold">{monthlyRevenue.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
               <p className="text-xs text-primary-foreground/80">
-                +20.1% em relação ao mês passado
+                Total para o mês atual
               </p>
             </CardContent>
           </Card>
@@ -93,9 +152,9 @@ export default function DashboardPage() {
               <Wrench className="h-5 w-5 text-accent-foreground/80" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">20</div>
+              <div className="text-3xl font-bold">{openServiceOrders}</div>
               <p className="text-xs text-accent-foreground/80">
-                Aguardando e Em Progresso
+                Aguardando, Pendente e Em Progresso
               </p>
             </CardContent>
           </Card>
@@ -105,7 +164,7 @@ export default function DashboardPage() {
               <Users className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">+12</div>
+              <div className="text-3xl font-bold">+{newCustomers}</div>
               <p className="text-xs text-muted-foreground">
                 Neste mês
               </p>
@@ -117,7 +176,7 @@ export default function DashboardPage() {
               <ShoppingCart className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">R$ 5.760,40</div>
+              <div className="text-3xl font-bold">{monthlyPurchases.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
                <p className="text-xs text-muted-foreground">
                 Total de despesas com peças
               </p>
@@ -127,34 +186,27 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="lg:col-span-4">
             <CardHeader>
-              <CardTitle>Receitas vs. Despesas</CardTitle>
-              <CardDescription>Comparativo mensal de receitas e despesas</CardDescription>
+              <CardTitle>Receitas Mensais</CardTitle>
             </CardHeader>
             <CardContent className="pl-2">
               <ChartContainer config={chartConfig} className="h-[300px] w-full">
                  <ResponsiveContainer>
-                    <BarChart data={revenueData}>
+                    <BarChart data={revenueByMonth}>
                         <XAxis
                         dataKey="month"
                         tickLine={false}
                         tickMargin={10}
                         axisLine={false}
                         />
+                        <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value/1000}k`} />
                         <ChartTooltip
-                        content={<ChartTooltipContent indicator="dot" />}
+                         cursor={false}
+                         content={<ChartTooltipContent indicator="dot" />}
                         />
-                        <ChartLegend content={<ChartLegendContent />} />
                         <Bar
-                        dataKey="revenue"
-                        fill="var(--color-revenue)"
-                        radius={4}
-                        />
-                        <Line
-                        type="monotone"
-                        dataKey="expenses"
-                        stroke="var(--color-expenses)"
-                        strokeWidth={2}
-                        dot={false}
+                          dataKey="revenue"
+                          fill="var(--color-revenue)"
+                          radius={4}
                         />
                     </BarChart>
                 </ResponsiveContainer>
@@ -177,7 +229,7 @@ export default function DashboardPage() {
                       content={<ChartTooltipContent hideLabel indicator="dot" />}
                     />
                     <Pie
-                      data={osData}
+                      data={osStatusData}
                       dataKey="count"
                       nameKey="status"
                       innerRadius={50}

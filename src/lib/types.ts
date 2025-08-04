@@ -7,6 +7,7 @@ export type Person = {
   email: string;
   cpfCnpj: string;
   type: 'Cliente' | 'Fornecedor' | 'Funcionário';
+  createdAt?: Timestamp;
 };
 
 export type Product = {
