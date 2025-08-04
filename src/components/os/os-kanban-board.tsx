@@ -17,15 +17,23 @@ import { PaymentDialog } from './payment-dialog';
 import { NewOsSheet } from './new-os-sheet';
 import { collection, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { cn } from '@/lib/utils';
 
 type Status = ServiceOrder['status'];
 
-const columns: Status[] = ['Aguardando', 'Aguardando Peça', 'Em Progresso', 'Concluído'];
+const columns: Status[] = ['Pendente', 'Em Progresso', 'Aguardando Peças', 'Concluído'];
 const columnTitles: Record<Status, string> = {
-  'Aguardando': 'Aguardando',
-  'Aguardando Peça': 'Aguardando Peça',
+  'Pendente': 'Pendente',
   'Em Progresso': 'Em Progresso',
+  'Aguardando Peças': 'Aguardando Peças',
   'Concluído': 'Concluído',
+};
+
+const columnColors: Record<Status, string> = {
+    'Pendente': 'bg-blue-100 dark:bg-blue-900/40',
+    'Em Progresso': 'bg-yellow-100 dark:bg-yellow-900/40',
+    'Aguardando Peças': 'bg-orange-100 dark:bg-orange-900/40',
+    'Concluído': 'bg-green-100 dark:bg-green-900/40',
 };
 
 function SlaTimer({ date }: { date: Date }) {
@@ -136,7 +144,7 @@ export function OsKanbanBoard() {
       {columns.map(status => (
         <div
           key={status}
-          className="rounded-lg bg-secondary/50 p-4 flex flex-col gap-4"
+          className={cn("rounded-lg p-4 flex flex-col gap-4", columnColors[status])}
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, status)}
         >

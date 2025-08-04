@@ -164,7 +164,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
         customerId: values.customer,
         technician: values.technician,
         description: values.description,
-        status: isEditing ? order!.status : 'Aguardando',
+        status: isEditing ? order!.status : 'Pendente',
         total: totalValue,
         discount: values.discount,
         surcharge: values.surcharge,
@@ -181,7 +181,7 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
         await updateDoc(orderRef, osData);
       } else {
         osData.createdAt = Timestamp.now();
-        osData.status = 'Aguardando Peça';
+        osData.status = 'Pendente';
         await addDoc(collection(db, "serviceOrders"), osData);
       }
 

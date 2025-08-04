@@ -38,7 +38,7 @@ export type ServiceOrder = {
   customer: Person;
   technician: string;
   description: string;
-  status: 'Aguardando' | 'Em Progresso' | 'Concluído' | 'Aguardando Peça';
+  status: 'Pendente' | 'Em Progresso' | 'Concluído' | 'Aguardando Peças';
   createdAt: Date;
   items: ServiceOrderItem[];
   total: number;
