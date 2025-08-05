@@ -1,7 +1,7 @@
 
 "use client"
 
-import { Plus } from "lucide-react"
+import { Plus, Edit } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CalendarIcon } from "lucide-react"
@@ -23,7 +22,7 @@ import { cn } from "@/lib/utils"
 import { format, addMonths } from "date-fns"
 import { useEffect, useState } from "react"
 import type { Person, Purchase } from "@/lib/types"
-import { collection, onSnapshot, writeBatch, Timestamp, doc } from "firebase/firestore"
+import { collection, onSnapshot, writeBatch, Timestamp, doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useToast } from "@/hooks/use-toast"
 import { z } from "zod"
@@ -38,34 +37,44 @@ const purchaseSchema = z.object({
   installments: z.coerce.number().min(1, "Pelo menos 1 parcela").default(1),
   total: z.coerce.number().min(0.01, "Valor deve ser maior que zero"),
   paymentDate: z.date({ required_error: "Data é obrigatória" }),
+  status: z.enum(['Previsão', 'Pago']),
 });
 
 
-export function NewPurchaseSheet() {
+interface NewPurchaseSheetProps {
+    isEditing?: boolean;
+    purchase?: Purchase;
+    trigger?: React.ReactNode;
+}
+
+
+export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPurchaseSheetProps) {
   const [people, setPeople] = useState<Person[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof purchaseSchema>>({
     resolver: zodResolver(purchaseSchema),
-    defaultValues: {
-        installments: 1,
-        paymentDate: new Date(),
-    }
-  })
+  });
+
+  const isPaid = isEditing && purchase?.status === 'Pago';
 
   useEffect(() => {
-    if (!isOpen) {
-        form.reset({
-            installments: 1,
-            paymentDate: new Date(),
-            supplierId: undefined,
-            itemName: "",
-            invoice: "",
-            total: undefined,
-        });
+    if (isOpen) {
+        if (isEditing && purchase) {
+            form.reset({
+                ...purchase,
+                supplierId: purchase.supplier.id,
+            });
+        } else {
+            form.reset({
+                installments: 1,
+                paymentDate: new Date(),
+                status: 'Previsão',
+            });
+        }
     }
-  }, [isOpen, form])
+  }, [isOpen, isEditing, purchase, form])
 
 
   useEffect(() => {
@@ -79,53 +88,76 @@ export function NewPurchaseSheet() {
   
   const onSubmit = async (values: z.infer<typeof purchaseSchema>) => {
     try {
-        const batch = writeBatch(db);
-        const { installments, total, paymentDate, ...rest } = values;
-        
-        const installmentValue = total / installments;
+        if(isEditing && purchase) {
+            const purchaseRef = doc(db, 'purchases', purchase.id);
+            const { installments, total, paymentDate, ...rest } = values;
 
-        for (let i = 0; i < installments; i++) {
-            const docRef = doc(collection(db, "purchases"));
-            const currentPaymentDate = addMonths(paymentDate, i);
-            
             const purchaseData = {
                 ...rest,
-                total: installmentValue,
-                paymentDate: Timestamp.fromDate(currentPaymentDate),
-                installments: `${i + 1}/${installments}`,
+                total,
+                paymentDate: Timestamp.fromDate(paymentDate),
+                installments: purchase.installments,
             };
-            batch.set(docRef, purchaseData);
+            
+            await updateDoc(purchaseRef, purchaseData);
+            toast({
+                title: "Compra atualizada!",
+                description: "A compra foi atualizada com sucesso."
+            });
+
+        } else {
+            const batch = writeBatch(db);
+            const { installments, total, paymentDate, ...rest } = values;
+            
+            const installmentValue = total / installments;
+
+            for (let i = 0; i < installments; i++) {
+                const docRef = doc(collection(db, "purchases"));
+                const currentPaymentDate = addMonths(paymentDate, i);
+                
+                const purchaseData = {
+                    ...rest,
+                    total: installmentValue,
+                    paymentDate: Timestamp.fromDate(currentPaymentDate),
+                    installments: `${i + 1}/${installments}`,
+                    status: 'Previsão' as const,
+                };
+                batch.set(docRef, purchaseData);
+            }
+
+            await batch.commit();
+
+            toast({
+                title: "Compra registrada!",
+                description: `${installments} parcela(s) foram criadas com sucesso.`
+            });
         }
-
-        await batch.commit();
-
-        toast({
-            title: "Compra registrada!",
-            description: `${installments} parcela(s) foram criadas com sucesso.`
-        });
+        
         setIsOpen(false);
+
     } catch (error) {
         console.error("Error creating purchases: ", error);
         toast({
             title: "Erro ao registrar compra",
-            description: "Ocorreu um erro ao tentar salvar as parcelas da compra.",
+            description: "Ocorreu um erro ao tentar salvar a compra.",
             variant: "destructive",
         })
     }
   }
+  
+  const title = isEditing ? 'Editar Compra' : 'Registrar Nova Compra';
+  const description = isEditing ? 'Atualize os dados da compra.' : 'Preencha os dados da compra para adicionar ao histórico.';
 
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button><Plus className="-ml-1 h-4 w-4" /> Nova Compra</Button>
+        {trigger || <Button><Plus className="-ml-1 h-4 w-4" /> Nova Compra</Button>}
       </SheetTrigger>
       <SheetContent className="sm:max-w-lg w-full flex flex-col">
         <SheetHeader>
-          <SheetTitle className="font-headline">Registrar Nova Compra</SheetTitle>
-          <SheetDescription>
-            Preencha os dados da compra para adicionar ao histórico.
-          </SheetDescription>
+          <SheetTitle className="font-headline">{title}</SheetTitle>
+          <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col gap-4 py-4 overflow-y-auto">
@@ -135,7 +167,7 @@ export function NewPurchaseSheet() {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Fornecedor</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={isPaid}>
                                 <FormControl>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecione um fornecedor" />
@@ -158,7 +190,7 @@ export function NewPurchaseSheet() {
                         <FormItem>
                             <FormLabel>Item/Descrição</FormLabel>
                             <FormControl>
-                                <Input placeholder="Descreva o item ou serviço comprado" {...field} />
+                                <Input placeholder="Descreva o item ou serviço comprado" {...field} disabled={isPaid} />
                             </FormControl>
                              <FormMessage />
                         </FormItem>
@@ -172,7 +204,7 @@ export function NewPurchaseSheet() {
                         <FormItem>
                             <FormLabel>Nota Fiscal (Opcional)</FormLabel>
                             <FormControl>
-                                <Input placeholder="Nº da nota fiscal" {...field} />
+                                <Input placeholder="Nº da nota fiscal" {...field} disabled={isPaid} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -187,7 +219,7 @@ export function NewPurchaseSheet() {
                            <FormItem>
                              <FormLabel>Parcelas</FormLabel>
                              <FormControl>
-                                <Input type="number" placeholder="1" {...field} />
+                                <Input type="number" placeholder="1" {...field} disabled={isEditing} />
                              </FormControl>
                              <FormMessage />
                            </FormItem>
@@ -200,7 +232,7 @@ export function NewPurchaseSheet() {
                             <FormItem>
                                 <FormLabel>Valor Total (R$)</FormLabel>
                                 <FormControl>
-                                 <Input type="number" placeholder="R$ 0,00" {...field} />
+                                 <Input type="number" placeholder="R$ 0,00" {...field} disabled={isPaid} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -212,7 +244,7 @@ export function NewPurchaseSheet() {
                     control={form.control}
                     render={({ field }) => (
                         <FormItem className="flex flex-col">
-                            <FormLabel>Data da 1ª Parcela</FormLabel>
+                            <FormLabel>Data de Vencimento</FormLabel>
                             <Popover>
                             <PopoverTrigger asChild>
                                 <FormControl>
@@ -222,6 +254,7 @@ export function NewPurchaseSheet() {
                                     "justify-start text-left font-normal",
                                     !field.value && "text-muted-foreground"
                                     )}
+                                    disabled={isPaid}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
                                     {field.value ? format(field.value, "PPP") : <span>Selecione uma data</span>}
@@ -241,11 +274,32 @@ export function NewPurchaseSheet() {
                         </FormItem>
                     )}
                 />
+                 <FormField
+                    name="status"
+                    control={form.control}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Status</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={isPaid}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o status" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Previsão">Previsão</SelectItem>
+                                    <SelectItem value="Pago">Pago</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
               <SheetFooter className="mt-auto">
                 <SheetClose asChild>
                     <Button variant="outline">Cancelar</Button>
                 </SheetClose>
-                <Button type="submit">Salvar</Button>
+                {!isPaid && <Button type="submit">Salvar</Button>}
             </SheetFooter>
             </form>
         </Form>

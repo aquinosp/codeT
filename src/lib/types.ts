@@ -64,10 +64,15 @@ export type Purchase = {
   id: string;
   invoice: string;
   supplier: Person;
+  supplierId: string;
   itemName: string;
   installments: string;
   total: number;
   paymentDate: Date;
+  status: 'Previsão' | 'Pago';
 };
 
-    
+
+export type PurchaseDocument = Omit<Purchase, 'id' | 'supplier' | 'paymentDate'> & {
+    paymentDate: Timestamp;
+}
