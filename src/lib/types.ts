@@ -64,7 +64,7 @@ export type Purchase = {
   id: string;
   invoice: string;
   supplier: Person;
-  item: Product;
+  itemName: string;
   installments: string;
   total: number;
   paymentDate: Date;

@@ -22,8 +22,8 @@ import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format, addMonths } from "date-fns"
 import { useEffect, useState } from "react"
-import type { Person, Product, Purchase } from "@/lib/types"
-import { collection, onSnapshot, writeBatch, Timestamp } from "firebase/firestore"
+import type { Person, Purchase } from "@/lib/types"
+import { collection, onSnapshot, writeBatch, Timestamp, doc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useToast } from "@/hooks/use-toast"
 import { z } from "zod"
@@ -33,7 +33,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 
 const purchaseSchema = z.object({
   supplierId: z.string().min(1, "Fornecedor é obrigatório"),
-  itemId: z.string().min(1, "Item é obrigatório"),
+  itemName: z.string().min(1, "Item/Descrição é obrigatório"),
   invoice: z.string().optional(),
   installments: z.coerce.number().min(1, "Pelo menos 1 parcela").default(1),
   total: z.coerce.number().min(0.01, "Valor deve ser maior que zero"),
@@ -43,7 +43,6 @@ const purchaseSchema = z.object({
 
 export function NewPurchaseSheet() {
   const [people, setPeople] = useState<Person[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
@@ -61,7 +60,7 @@ export function NewPurchaseSheet() {
             installments: 1,
             paymentDate: new Date(),
             supplierId: undefined,
-            itemId: undefined,
+            itemName: "",
             invoice: "",
             total: undefined,
         });
@@ -73,12 +72,8 @@ export function NewPurchaseSheet() {
     const unsubPeople = onSnapshot(collection(db, "people"), (snapshot) => {
       setPeople(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person)));
     });
-    const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
-      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-    });
     return () => {
       unsubPeople();
-      unsubProducts();
     };
   }, []);
   
@@ -129,7 +124,7 @@ export function NewPurchaseSheet() {
         <SheetHeader>
           <SheetTitle className="font-headline">Registrar Nova Compra</SheetTitle>
           <SheetDescription>
-            Preencha os dados da compra para adicionar ao histórico e atualizar o estoque.
+            Preencha os dados da compra para adicionar ao histórico.
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
@@ -157,23 +152,14 @@ export function NewPurchaseSheet() {
                     )}
                 />
                  <FormField
-                    name="itemId"
+                    name="itemName"
                     control={form.control}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Item</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecione um item" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {products.map(p => (
-                                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormLabel>Item/Descrição</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Descreva o item ou serviço comprado" {...field} />
+                            </FormControl>
                              <FormMessage />
                         </FormItem>
                     )}
@@ -267,5 +253,3 @@ export function NewPurchaseSheet() {
     </Sheet>
   )
 }
-
-    
