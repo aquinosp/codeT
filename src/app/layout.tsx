@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Toaster } from "@/components/ui/toaster"
 import './globals.css';
 import './print.css';
+import { AppSettingsProvider } from '@/context/app-settings-context';
+
 
 export const metadata: Metadata = {
   title: 'ERP TAO',
@@ -22,7 +24,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        {children}
+        <AppSettingsProvider>
+            {children}
+        </AppSettingsProvider>
         <Toaster />
       </body>
     </html>

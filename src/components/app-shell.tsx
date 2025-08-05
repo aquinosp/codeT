@@ -13,7 +13,9 @@ import {
 import NavMenu from '@/components/nav-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Menu, LogOut, Settings, Bell } from 'lucide-react';
+import { Menu, LogOut, Settings, Bell, Bike } from 'lucide-react';
+import { useAppSettings } from '@/context/app-settings-context';
+import Link from 'next/link';
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -22,13 +24,20 @@ interface AppShellProps {
 }
 
 export default function AppShell({ children, sidebarOpen, onSidebarOpenChange }: AppShellProps) {
+  const { appName, logoUrl } = useAppSettings();
+
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={onSidebarOpenChange}>
       <div className="flex min-h-screen bg-background">
         <Sidebar side="left" collapsible="icon" variant="sidebar">
           <SidebarHeader>
             <div className="flex items-center gap-3 p-4">
-              <h1 className="font-semibold text-xl text-sidebar-foreground group-data-[collapsible=icon]:hidden">ERP TAO</h1>
+               {logoUrl ? (
+                  <img src={logoUrl} alt="Logo" className="h-8 w-auto" />
+                ) : (
+                  <Bike className="h-8 w-8 text-primary" />
+                )}
+              <h1 className="font-semibold text-xl text-sidebar-foreground group-data-[collapsible=icon]:hidden">{appName}</h1>
                <SidebarTrigger className="ml-auto group-data-[collapsible=icon]:hidden" />
             </div>
           </SidebarHeader>
@@ -60,8 +69,10 @@ export default function AppShell({ children, sidebarOpen, onSidebarOpenChange }:
                  <Button variant="ghost" size="icon">
                     <Bell className="h-5 w-5" />
                  </Button>
-                 <Button variant="ghost" size="icon">
-                    <Settings className="h-5 w-5" />
+                 <Button variant="ghost" size="icon" asChild>
+                    <Link href="/configuracoes">
+                        <Settings className="h-5 w-5" />
+                    </Link>
                  </Button>
             </div>
           </header>

@@ -1,21 +1,25 @@
+
 "use client"
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Wrench, ShoppingCart, ClipboardList, Settings } from 'lucide-react';
+import { LayoutDashboard, Wrench, ShoppingCart, ClipboardList, Settings, Bike } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
+import { useAppSettings } from '@/context/app-settings-context';
+
 
 const menuItems = [
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/os', label: 'Ordens de Serviço', icon: Wrench },
   { href: '/compras', label: 'Compras', icon: ShoppingCart },
   { href: '/cadastros', label: 'Cadastros', icon: ClipboardList },
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
 export default function NavMenu() {
   const pathname = usePathname();
+  const { appName, logoUrl } = useAppSettings();
 
   return (
     <div className="flex w-full flex-col gap-0 p-2">

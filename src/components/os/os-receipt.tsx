@@ -1,11 +1,13 @@
 import type { ServiceOrder } from "@/lib/types";
 import { format } from 'date-fns';
+import { useAppSettings } from "@/context/app-settings-context";
 
 interface OsReceiptProps {
     order: ServiceOrder;
 }
 
 export function OsReceipt({ order }: OsReceiptProps) {
+    const { appName, logoUrl } = useAppSettings();
     const subTotal = order.items.reduce((acc, item) => acc + item.total, 0);
 
     return (
@@ -13,15 +15,19 @@ export function OsReceipt({ order }: OsReceiptProps) {
             <div className="mx-auto">
                 <div className="text-center space-y-2 mb-4">
                     <div className="flex justify-center">
-                        <svg className="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 17.5l-3.5-3.5"/>
-                            <path d="M12 3v10"/>
-                            <path d="M12 8l3.5 3.5"/>
-                            <path d="M12 3a9 9 0 00-9 9h18a9 9 0 00-9-9z"/>
-                        </svg>
+                         {logoUrl ? (
+                            <img src={logoUrl} alt="Logo" className="h-16 w-auto object-contain" />
+                         ) : (
+                            <svg className="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 17.5l-3.5-3.5"/>
+                                <path d="M12 3v10"/>
+                                <path d="M12 8l3.5 3.5"/>
+                                <path d="M12 3a9 9 0 00-9 9h18a9 9 0 00-9-9z"/>
+                            </svg>
+                         )}
                     </div>
                     <h1 className="font-bold text-sm tracking-wider">COMPROVANTE DE PEDIDO</h1>
-                    <p className="text-xs">TAO BIKES LTDA</p>
+                    <p className="text-xs">{appName}</p>
                     <p className="text-xs">CNPJ: 40.986.949/0001-27</p>
                     <p className="text-xs">Telefone: (41) 94042-3002</p>
                     <h2 className="font-bold text-base pt-1">PEDIDO {order.osNumber}</h2>

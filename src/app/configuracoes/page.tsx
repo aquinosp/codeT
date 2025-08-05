@@ -1,4 +1,8 @@
+
+'use client';
+
 import AppShell from '@/components/app-shell';
+import { SettingsForm } from '@/components/configuracoes/settings-form';
 
 export default function ConfiguracoesPage() {
   return (
@@ -7,10 +11,8 @@ export default function ConfiguracoesPage() {
         <h1 className="font-headline text-3xl font-bold text-foreground">
           Configurações
         </h1>
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">
-            Página de configurações em construção.
-          </p>
+        <div className="max-w-2xl mx-auto w-full">
+            <SettingsForm />
         </div>
       </div>
     </AppShell>
