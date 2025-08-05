@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { Plus, Edit } from "lucide-react"
@@ -55,6 +56,9 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
   const form = useForm<z.infer<typeof purchaseSchema>>({
     resolver: zodResolver(purchaseSchema),
+    defaultValues: {
+      installments: 1,
+    }
   });
 
   const isPaid = isEditing && purchase?.status === 'Pago';
@@ -64,7 +68,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
         if (isEditing && purchase) {
             form.reset({
                 ...purchase,
-                installments: parseInt(purchase.installments.split('/')[1]),
+                installments: parseInt(purchase.installments) || 1,
                 supplierId: purchase.supplier.id,
             });
         } else {
@@ -167,15 +171,15 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                     control={form.control}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Fornecedor</FormLabel>
+                            <FormLabel>Fornecedor / Funcionário</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value} disabled={isPaid}>
                                 <FormControl>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Selecione um fornecedor" />
+                                    <SelectValue placeholder="Selecione um fornecedor ou funcionário" />
                                 </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                {people.filter(p => p.type === 'Fornecedor').map(p => (
+                                {people.filter(p => p.type === 'Fornecedor' || p.type === 'Funcionário').map(p => (
                                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                                 ))}
                                 </SelectContent>
