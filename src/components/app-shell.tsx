@@ -9,13 +9,11 @@ import {
   SidebarFooter,
   SidebarInset,
   SidebarTrigger,
-  SidebarRail,
 } from '@/components/ui/sidebar';
 import NavMenu from '@/components/nav-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Menu, LogOut, Settings, Bell, Search } from 'lucide-react';
-import { Input } from './ui/input';
+import { Menu, LogOut, Settings, Bell } from 'lucide-react';
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -57,10 +55,6 @@ export default function AppShell({ children, sidebarOpen, onSidebarOpenChange }:
           <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
             <div className="flex items-center gap-2">
                  <SidebarTrigger className="md:hidden" />
-                 <div className="relative hidden md:block">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Procurando por algo..." className="pl-8 w-64" />
-                 </div>
             </div>
             <div className='flex items-center gap-2'>
                  <Button variant="ghost" size="icon">

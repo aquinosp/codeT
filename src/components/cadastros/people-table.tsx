@@ -1,3 +1,4 @@
+
 "use client"
 
 import {
@@ -38,8 +39,13 @@ const getBadgeVariant = (type: Person['type']) => {
   }
 }
 
-export function PeopleTable() {
+interface PeopleTableProps {
+  searchTerm: string;
+}
+
+export function PeopleTable({ searchTerm }: PeopleTableProps) {
   const [people, setPeople] = useState<Person[]>([]);
+  const [filteredPeople, setFilteredPeople] = useState<Person[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, "people"), orderBy("name", "asc"));
@@ -49,6 +55,19 @@ export function PeopleTable() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const lowercasedFilter = searchTerm.toLowerCase();
+    const filtered = people.filter((person) => {
+      return (
+        person.name.toLowerCase().includes(lowercasedFilter) ||
+        (person.phone && person.phone.toLowerCase().includes(lowercasedFilter)) ||
+        (person.email && person.email.toLowerCase().includes(lowercasedFilter)) ||
+        (person.cpfCnpj && person.cpfCnpj.toLowerCase().includes(lowercasedFilter))
+      );
+    });
+    setFilteredPeople(filtered);
+  }, [searchTerm, people]);
 
   return (
     <div className="space-y-4">
@@ -74,7 +93,7 @@ export function PeopleTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {people.map((person) => (
+            {filteredPeople.map((person) => (
               <TableRow key={person.id}>
                 <TableCell className="font-medium">{person.name}</TableCell>
                 <TableCell>{person.phone}</TableCell>

@@ -1,3 +1,4 @@
+
 "use client"
 
 import {
@@ -17,8 +18,13 @@ import { db } from "@/lib/firebase"
 import { BulkImportSheet } from "./bulk-import-sheet"
 import { Badge } from "../ui/badge"
 
-export function ProductsTable() {
+interface ProductsTableProps {
+  searchTerm: string;
+}
+
+export function ProductsTable({ searchTerm }: ProductsTableProps) {
     const [products, setProducts] = useState<Product[]>([]);
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
     useEffect(() => {
         const q = query(collection(db, "products"), orderBy("name", "asc"));
@@ -28,6 +34,19 @@ export function ProductsTable() {
         });
         return () => unsubscribe();
     }, []);
+
+    useEffect(() => {
+      const lowercasedFilter = searchTerm.toLowerCase();
+      const filtered = products.filter((product) => {
+        return (
+          product.name.toLowerCase().includes(lowercasedFilter) ||
+          (product.code && product.code.toLowerCase().includes(lowercasedFilter)) ||
+          (product.group && product.group.toLowerCase().includes(lowercasedFilter)) ||
+          (product.description && product.description.toLowerCase().includes(lowercasedFilter))
+        );
+      });
+      setFilteredProducts(filtered);
+    }, [searchTerm, products]);
 
   return (
     <div className="space-y-4">
@@ -58,7 +77,7 @@ export function ProductsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <TableRow key={product.id}>
                 <TableCell className="font-mono text-xs">{product.code}</TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>
