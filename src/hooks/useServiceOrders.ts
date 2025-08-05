@@ -28,15 +28,13 @@ export function useServiceOrders(filter?: DateRangeFilter) {
             const ordersDataPromises = snapshot.docs.map(async (d) => {
                 const orderData = d.data() as ServiceOrderDocument;
 
-                if (!orderData.customerId) {
-                    return null;
+                let customer;
+                if (orderData.customerId) {
+                  const customerDoc = await getDoc(doc(db, "people", orderData.customerId));
+                  if (customerDoc.exists()) {
+                     customer = { id: customerDoc.id, ...customerDoc.data() };
+                  }
                 }
-
-                const customerDoc = await getDoc(doc(db, "people", orderData.customerId));
-                if (!customerDoc.exists()) {
-                    return null;
-                }
-                const customer = { id: customerDoc.id, ...customerDoc.data() };
 
                 const itemsPromises = (orderData.items || []).map(async (item) => {
                     if (!item.productId) return null;

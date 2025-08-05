@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -103,7 +104,7 @@ export function OsTable({ orders, onPrint, onDeliver }: OsTableProps) {
             {orders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className="font-medium">{order.osNumber}</TableCell>
-                <TableCell>{order.customer.name}</TableCell>
+                <TableCell>{order.customer?.name || 'Não informado'}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                 </TableCell>

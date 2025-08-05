@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import React, { useState, DragEvent, useEffect } from 'react';
@@ -143,7 +144,7 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
                     </DropdownMenu>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
-                    <p className="text-sm font-medium">{order.customer.name}</p>
+                    <p className="text-sm font-medium">{order.customer?.name || 'Não informado'}</p>
                     <p className="text-sm text-muted-foreground truncate">{order.description}</p>
                     <div className="mt-2 flex justify-between items-center">
                        <Badge variant="secondary">{order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Badge>

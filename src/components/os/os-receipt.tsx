@@ -28,8 +28,8 @@ export function OsReceipt({ order }: OsReceiptProps) {
                 </div>
 
                 <div className="space-y-1 mb-2 border-t border-b border-dashed border-black py-2">
-                    <p><span className="font-bold">CLIENTE:</span> {order.customer.name}</p>
-                    <p><span className="font-bold">TELEFONE:</span> {order.customer.phone}</p>
+                    <p><span className="font-bold">CLIENTE:</span> {order.customer?.name || 'Não informado'}</p>
+                    <p><span className="font-bold">TELEFONE:</span> {order.customer?.phone || 'Não informado'}</p>
                     <p><span className="font-bold">TÉCNICO:</span> {order.technician || 'Não informado'}</p>
                 </div>
 

@@ -35,7 +35,7 @@ import { Combobox } from "../ui/combobox"
 
 const osSchema = z.object({
   osNumber: z.string(),
-  customer: z.string().min(1, "Cliente é obrigatório"),
+  customer: z.string().optional(),
   technician: z.string().min(1, "Técnico é obrigatório"),
   description: z.string(),
   items: z.array(z.object({
@@ -65,7 +65,7 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
     resolver: zodResolver(osSchema),
     defaultValues: isEditing ? {
       osNumber: order?.osNumber,
-      customer: order?.customer.id,
+      customer: order?.customer?.id,
       technician: order?.technician,
       description: order?.description,
       items: order?.items.map(i => ({ 
@@ -177,7 +177,7 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
     return {
         id: isEditing ? order!.id : newId!,
         osNumber: values.osNumber,
-        customer: customer!,
+        customer: customer,
         technician: values.technician,
         description: values.description,
         status: isEditing ? order!.status : 'Pendente',
@@ -324,7 +324,7 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
               name="customer"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Cliente</FormLabel>
+                  <FormLabel>Cliente (Opcional)</FormLabel>
                      <Combobox
                         options={customerOptions}
                         value={field.value}

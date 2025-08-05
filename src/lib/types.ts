@@ -36,7 +36,7 @@ export type ServiceOrderItem = {
 export type ServiceOrder = {
   id: string;
   osNumber: string;
-  customer: Person;
+  customer?: Person;
   technician: string;
   description: string;
   status: 'Pendente' | 'Em Progresso' | 'Aguardando Peças' | 'Pronta' | 'Entregue';
@@ -49,7 +49,7 @@ export type ServiceOrder = {
 };
 
 export type ServiceOrderDocument = Omit<ServiceOrder, 'id' | 'customer' | 'items' | 'createdAt'> & {
-  customerId: string;
+  customerId?: string;
   createdAt: Timestamp;
   items: {
     productId: string;
