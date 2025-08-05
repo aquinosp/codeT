@@ -22,7 +22,7 @@ import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import type { ServiceOrder, Person, Product, ServiceOrderDocument } from "@/lib/types"
+import type { ServiceOrder, Person, Product, ServiceOrderDocument, ServiceOrderItem } from "@/lib/types"
 import React, { useEffect, useState } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { cn } from "@/lib/utils"
@@ -51,9 +51,10 @@ interface NewOsSheetProps {
   isEditing?: boolean;
   order?: ServiceOrder;
   trigger?: React.ReactNode;
+  onPrint?: (order: ServiceOrder) => void;
 }
 
-export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProps) {
+export function NewOsSheet({ isEditing = false, order, trigger, onPrint }: NewOsSheetProps) {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false);
   const [people, setPeople] = useState<Person[]>([]);
@@ -159,6 +160,34 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
     }
   }
 
+  const buildServiceOrderForPrint = (values: z.infer<typeof osSchema>): ServiceOrder => {
+    const customer = people.find(p => p.id === values.customer);
+    const items: ServiceOrderItem[] = values.items.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        return {
+            id: product!.id,
+            product: product!,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.quantity * item.unitPrice,
+        };
+    });
+
+    return {
+        id: isEditing ? order!.id : '',
+        osNumber: values.osNumber,
+        customer: customer!,
+        technician: values.technician,
+        description: values.description,
+        status: isEditing ? order!.status : 'Pendente',
+        createdAt: isEditing ? order!.createdAt : new Date(),
+        items,
+        total: totalValue,
+        discount: values.discount,
+        surcharge: values.surcharge,
+    };
+  };
+
   const handleSave = async (values: z.infer<typeof osSchema>) => {
     try {
       const osData: Omit<ServiceOrderDocument, 'createdAt'> & {createdAt?: Timestamp} = {
@@ -191,8 +220,12 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
         title: `OS ${isEditing ? 'Atualizada' : 'Salva'}!`,
         description: `A ordem de serviço ${values.osNumber} foi ${isEditing ? 'atualizada' : 'salva'} com sucesso.`,
       })
+      
+      const orderForPrint = buildServiceOrderForPrint(values);
       form.reset();
       setIsOpen(false);
+      return orderForPrint;
+
     } catch (error) {
        console.error("Error saving OS: ", error);
        toast({
@@ -200,13 +233,15 @@ export function NewOsSheet({ isEditing = false, order, trigger }: NewOsSheetProp
          description: "Ocorreu um erro ao salvar a Ordem de Serviço.",
          variant: "destructive"
        })
+       return null;
     }
   }
 
-  function onSaveAndPrint(values: z.infer<typeof osSchema>) {
-    handleSave(values);
-    // This is a placeholder for a real print action
-    setTimeout(() => window.print(), 500);
+  async function onSaveAndPrint(values: z.infer<typeof osSchema>) {
+    const savedOrder = await handleSave(values);
+    if (savedOrder && onPrint) {
+        onPrint(savedOrder);
+    }
   }
 
 

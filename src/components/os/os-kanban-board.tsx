@@ -4,7 +4,7 @@ import React, { useState, DragEvent, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { ServiceOrder } from '@/lib/types';
-import { MoreHorizontal, Timer } from 'lucide-react';
+import { MoreHorizontal, Timer, Printer } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -65,7 +65,11 @@ function SlaTimer({ date }: { date: Date }) {
   )
 }
 
-export function OsKanbanBoard() {
+interface OsKanbanBoardProps {
+  onPrint: (order: ServiceOrder) => void;
+}
+
+export function OsKanbanBoard({ onPrint }: OsKanbanBoardProps) {
   const { orders } = useServiceOrders();
   const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
   const [paymentOrder, setPaymentOrder] = useState<ServiceOrder | null>(null);
@@ -140,7 +144,8 @@ export function OsKanbanBoard() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <NewOsSheet isEditing order={order} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                        <NewOsSheet isEditing order={order} onPrint={onPrint} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                        <DropdownMenuItem onClick={() => onPrint(order)}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleSetStatus(order.id, 'Pronta')}>Marcar como Pronta</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setPaymentOrder(order)}>Registrar Entrega</DropdownMenuItem>

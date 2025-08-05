@@ -69,8 +69,12 @@ function SlaTimer({ date }: { date: Date }) {
   )
 }
 
+interface OsTableProps {
+  onPrint: (order: ServiceOrder) => void;
+}
 
-export function OsTable() {
+
+export function OsTable({ onPrint }: OsTableProps) {
   const { orders } = useServiceOrders();
   const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null);
   const { toast } = useToast();
@@ -127,8 +131,8 @@ export function OsTable() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                      <NewOsSheet isEditing order={order} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
-                      <DropdownMenuItem onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
+                      <NewOsSheet isEditing order={order} onPrint={onPrint} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                      <DropdownMenuItem onClick={() => onPrint(order)}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleMarkAsReady(order)} disabled={order.status === 'Pronta' || order.status === 'Entregue'}>Marcar como Pronta</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setSelectedOrder(order)} disabled={order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>

@@ -3,20 +3,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { OsTable } from "@/components/os/os-table"
 import { OsKanbanBoard } from "@/components/os/os-kanban-board"
 import { NewOsSheet } from "@/components/os/new-os-sheet"
+import type { ServiceOrder } from "@/lib/types";
 
 interface OsTabsProps {
   onTabChange: (value: string) => void;
   activeTab: string;
+  onPrint: (order: ServiceOrder) => void;
 }
 
-export default function OsTabs({ onTabChange, activeTab }: OsTabsProps) {
+export default function OsTabs({ onTabChange, activeTab, onPrint }: OsTabsProps) {
   return (
     <div className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-foreground">
           Ordens de Serviço
         </h1>
-        <NewOsSheet />
+        <NewOsSheet onPrint={onPrint} />
       </div>
       <Tabs 
         defaultValue="lista" 
@@ -29,10 +31,10 @@ export default function OsTabs({ onTabChange, activeTab }: OsTabsProps) {
           <TabsTrigger value="kanban">Kanban</TabsTrigger>
         </TabsList>
         <TabsContent value="kanban" className="flex-1 mt-4">
-          <OsKanbanBoard />
+          <OsKanbanBoard onPrint={onPrint} />
         </TabsContent>
         <TabsContent value="lista" className="mt-4">
-          <OsTable />
+          <OsTable onPrint={onPrint} />
         </TabsContent>
       </Tabs>
     </div>
