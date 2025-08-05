@@ -64,6 +64,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
         if (isEditing && purchase) {
             form.reset({
                 ...purchase,
+                installments: parseInt(purchase.installments.split('/')[1]),
                 supplierId: purchase.supplier.id,
             });
         } else {
