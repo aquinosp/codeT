@@ -4,28 +4,22 @@ import { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, getDoc, query, orderBy, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ServiceOrder, ServiceOrderDocument } from "@/lib/types";
+import type { DateRange } from 'react-day-picker';
 
-export type DateFilter = 'all' | 'today' | 'yesterday';
+export type DateRangeFilter = DateRange | undefined;
 
-export function useServiceOrders(filter: DateFilter = 'all') {
+export function useServiceOrders(filter?: DateRangeFilter) {
     const [orders, setOrders] = useState<ServiceOrder[]>([]);
 
     useEffect(() => {
-        let q = query(collection(db, "serviceOrders"), orderBy("osNumber", "desc"));
+        let q = query(collection(db, "serviceOrders"), orderBy("createdAt", "desc"));
 
-        if (filter !== 'all') {
-            const now = new Date();
-            let start, end;
+        if (filter?.from && filter?.to) {
+            const start = new Date(filter.from);
+            start.setHours(0, 0, 0, 0);
 
-            if (filter === 'today') {
-                start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-                end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-            } else { // yesterday
-                const yesterday = new Date(now);
-                yesterday.setDate(now.getDate() - 1);
-                start = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0);
-                end = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59);
-            }
+            const end = new Date(filter.to);
+            end.setHours(23, 59, 59, 999);
             
             q = query(q, where('createdAt', '>=', Timestamp.fromDate(start)), where('createdAt', '<=', Timestamp.fromDate(end)));
         }

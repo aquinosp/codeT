@@ -5,8 +5,8 @@ import { OsTable } from "@/components/os/os-table"
 import { OsKanbanBoard } from "@/components/os/os-kanban-board"
 import { NewOsSheet } from "@/components/os/new-os-sheet"
 import type { ServiceOrder } from "@/lib/types";
-import { Button } from "../ui/button";
-import type { DateFilter } from "@/hooks/useServiceOrders";
+import { DateRangePicker } from "../ui/date-range-picker";
+import type { DateRange } from "react-day-picker";
 
 interface OsTabsProps {
   orders: ServiceOrder[];
@@ -14,8 +14,8 @@ interface OsTabsProps {
   activeTab: string;
   onPrint: (order: ServiceOrder) => void;
   onDeliver: (order: ServiceOrder) => void;
-  dateFilter: DateFilter;
-  onDateFilterChange: (filter: DateFilter) => void;
+  dateFilter?: DateRange;
+  onDateFilterChange: (filter?: DateRange) => void;
 }
 
 export default function OsTabs({ orders, onTabChange, activeTab, onPrint, onDeliver, dateFilter, onDateFilterChange }: OsTabsProps) {
@@ -42,9 +42,7 @@ export default function OsTabs({ orders, onTabChange, activeTab, onPrint, onDeli
                 </TabsList>
             </Tabs>
             <div className="flex items-center gap-2">
-                <Button variant={dateFilter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => onDateFilterChange('all')}>Todos</Button>
-                <Button variant={dateFilter === 'today' ? 'default' : 'outline'} size="sm" onClick={() => onDateFilterChange('today')}>Hoje</Button>
-                <Button variant={dateFilter === 'yesterday' ? 'default' : 'outline'} size="sm" onClick={() => onDateFilterChange('yesterday')}>Ontem</Button>
+                <DateRangePicker date={dateFilter} onDateChange={onDateFilterChange} />
             </div>
        </div>
 
