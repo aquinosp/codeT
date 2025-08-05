@@ -193,7 +193,6 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
     try {
       const osData: Omit<ServiceOrderDocument, 'createdAt'> & {createdAt?: Timestamp} = {
         osNumber: values.osNumber,
-        customerId: values.customer,
         technician: values.technician,
         description: values.description || "",
         status: isEditing ? order!.status : 'Pendente',
@@ -207,6 +206,10 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
           total: item.quantity * item.unitPrice,
         })) : [],
       };
+      
+      if(values.customer) {
+        osData.customerId = values.customer;
+      }
 
       let savedOrderId: string;
       if (isEditing && order) {
