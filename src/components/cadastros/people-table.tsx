@@ -61,7 +61,7 @@ export function PeopleTable({ searchTerm }: PeopleTableProps) {
     const filtered = people.filter((person) => {
       return (
         person.name.toLowerCase().includes(lowercasedFilter) ||
-        (person.phone && person.phone.toLowerCase().includes(lowercasedFilter)) ||
+        (person.phone && String(person.phone).toLowerCase().includes(lowercasedFilter)) ||
         (person.email && person.email.toLowerCase().includes(lowercasedFilter)) ||
         (person.cpfCnpj && person.cpfCnpj.toLowerCase().includes(lowercasedFilter))
       );
