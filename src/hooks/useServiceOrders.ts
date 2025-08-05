@@ -36,7 +36,9 @@ export function useServiceOrders(filter?: DateRangeFilter) {
                   }
                 }
 
-                const itemsPromises = (orderData.items || []).map(async (item) => {
+                const itemsList = Array.isArray(orderData.items) ? orderData.items : [];
+
+                const itemsPromises = itemsList.map(async (item) => {
                     if (!item.productId) return null;
                     const productDoc = await getDoc(doc(db, "products", item.productId));
                     if (!productDoc.exists()) return null;

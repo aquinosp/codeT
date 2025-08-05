@@ -200,12 +200,12 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
         total: totalValue,
         discount: values.discount,
         surcharge: values.surcharge,
-        items: values.items.map(item => ({
+        items: values.items ? values.items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           total: item.quantity * item.unitPrice,
-        })),
+        })) : [],
       };
 
       let savedOrderId: string;
