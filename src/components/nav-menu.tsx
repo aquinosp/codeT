@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Wrench, ShoppingCart, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Wrench, ShoppingCart, ClipboardList, Settings } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
@@ -11,6 +11,7 @@ const menuItems = [
   { href: '/compras', label: 'Compras', icon: ShoppingCart },
   { href: '/cadastros', label: 'Cadastros', icon: ClipboardList },
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
 export default function NavMenu() {
