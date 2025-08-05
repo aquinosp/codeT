@@ -15,7 +15,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { PaymentDialog } from './payment-dialog';
 import { NewOsSheet } from './new-os-sheet';
 import { doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
@@ -67,11 +66,11 @@ function SlaTimer({ date }: { date: Date }) {
 interface OsKanbanBoardProps {
   orders: ServiceOrder[];
   onPrint: (order: ServiceOrder) => void;
+  onDeliver: (order: ServiceOrder) => void;
 }
 
-export function OsKanbanBoard({ orders, onPrint }: OsKanbanBoardProps) {
+export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps) {
   const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
-  const [paymentOrder, setPaymentOrder] = useState<ServiceOrder | null>(null);
   const { toast } = useToast();
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>, orderId: string) => {
@@ -90,20 +89,12 @@ export function OsKanbanBoard({ orders, onPrint }: OsKanbanBoardProps) {
     const order = orders.find(o => o.id === orderId);
     
     if (order && newStatus === 'Entregue' && order.status !== 'Entregue') {
-        setPaymentOrder(order);
+        onDeliver(order);
     } else if (order) {
         const orderRef = doc(db, "serviceOrders", orderId);
         await updateDoc(orderRef, { status: newStatus });
     }
   };
-
-  const handlePaymentConfirm = async (method: ServiceOrder['paymentMethod']) => {
-    if(paymentOrder){
-       const orderRef = doc(db, "serviceOrders", paymentOrder.id);
-       await updateDoc(orderRef, { status: 'Entregue', paymentMethod: method });
-    }
-    setPaymentOrder(null);
-  }
 
   const handleSetStatus = async (orderId: string, status: Status) => {
     const orderRef = doc(db, "serviceOrders", orderId);
@@ -143,11 +134,11 @@ export function OsKanbanBoard({ orders, onPrint }: OsKanbanBoardProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <NewOsSheet isEditing order={order} onPrint={onPrint} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                        <NewOsSheet isEditing order={order} onPrint={onPrint} onDeliver={onDeliver} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
                         <DropdownMenuItem onClick={() => onPrint(order)}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleSetStatus(order.id, 'Pronta')}>Marcar como Pronta</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setPaymentOrder(order)}>Registrar Entrega</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onDeliver(order)}>Registrar Entrega</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </CardHeader>
@@ -165,9 +156,6 @@ export function OsKanbanBoard({ orders, onPrint }: OsKanbanBoardProps) {
         </div>
       ))}
     </div>
-    {paymentOrder && (
-        <PaymentDialog order={paymentOrder} onConfirm={handlePaymentConfirm} onOpenChange={(isOpen) => !isOpen && setPaymentOrder(null)} />
-    )}
     </>
   );
 }

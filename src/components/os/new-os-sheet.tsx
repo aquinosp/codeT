@@ -2,7 +2,7 @@
 
 "use client"
 
-import { Plus, Trash2, Printer, ChevronDown } from "lucide-react"
+import { Plus, Trash2, Printer, ChevronDown, CheckCircle } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -52,9 +52,10 @@ interface NewOsSheetProps {
   order?: ServiceOrder;
   trigger?: React.ReactNode;
   onPrint?: (order: ServiceOrder) => void;
+  onDeliver?: (order: ServiceOrder) => void;
 }
 
-export function NewOsSheet({ isEditing = false, order, trigger, onPrint }: NewOsSheetProps) {
+export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliver }: NewOsSheetProps) {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false);
   const [people, setPeople] = useState<Person[]>([]);
@@ -160,7 +161,7 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint }: NewOs
     }
   }
 
-  const buildServiceOrderForPrint = (values: z.infer<typeof osSchema>): ServiceOrder => {
+  const buildServiceOrderForCallback = async (values: z.infer<typeof osSchema>, newId?: string): Promise<ServiceOrder> => {
     const customer = people.find(p => p.id === values.customer);
     const items: ServiceOrderItem[] = values.items.map(item => {
         const product = products.find(p => p.id === item.productId);
@@ -174,7 +175,7 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint }: NewOs
     });
 
     return {
-        id: isEditing ? order!.id : '',
+        id: isEditing ? order!.id : newId!,
         osNumber: values.osNumber,
         customer: customer!,
         technician: values.technician,
@@ -207,13 +208,16 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint }: NewOs
         })),
       };
 
+      let savedOrderId: string;
       if (isEditing && order) {
         const orderRef = doc(db, "serviceOrders", order.id);
         await updateDoc(orderRef, osData);
+        savedOrderId = order.id;
       } else {
         osData.createdAt = Timestamp.now();
         osData.status = 'Pendente';
-        await addDoc(collection(db, "serviceOrders"), osData);
+        const docRef = await addDoc(collection(db, "serviceOrders"), osData);
+        savedOrderId = docRef.id;
       }
 
       toast({
@@ -221,10 +225,10 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint }: NewOs
         description: `A ordem de serviço ${values.osNumber} foi ${isEditing ? 'atualizada' : 'salva'} com sucesso.`,
       })
       
-      const orderForPrint = buildServiceOrderForPrint(values);
+      const orderForCallback = await buildServiceOrderForCallback(values, savedOrderId);
       form.reset();
       setIsOpen(false);
-      return orderForPrint;
+      return orderForCallback;
 
     } catch (error) {
        console.error("Error saving OS: ", error);
@@ -241,6 +245,13 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint }: NewOs
     const savedOrder = await handleSave(values);
     if (savedOrder && onPrint) {
         onPrint(savedOrder);
+    }
+  }
+
+  async function onSaveAndDeliver(values: z.infer<typeof osSchema>) {
+    const savedOrder = await handleSave(values);
+    if (savedOrder && onDeliver) {
+        onDeliver(savedOrder);
     }
   }
 
@@ -464,6 +475,10 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint }: NewOs
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                       <DropdownMenuItem onClick={form.handleSubmit(onSaveAndDeliver)}>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Salvar e Entregar
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={form.handleSubmit(onSaveAndPrint)}>
                         <Printer className="mr-2 h-4 w-4" />
                         Salvar e Imprimir

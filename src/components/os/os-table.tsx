@@ -72,25 +72,17 @@ function SlaTimer({ date }: { date: Date }) {
 interface OsTableProps {
   orders: ServiceOrder[];
   onPrint: (order: ServiceOrder) => void;
+  onDeliver: (order: ServiceOrder) => void;
 }
 
 
-export function OsTable({ orders, onPrint }: OsTableProps) {
-  const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null);
+export function OsTable({ orders, onPrint, onDeliver }: OsTableProps) {
   const { toast } = useToast();
 
   const handleMarkAsReady = async (order: ServiceOrder) => {
     const orderRef = doc(db, "serviceOrders", order.id);
     await updateDoc(orderRef, { status: 'Pronta' });
     toast({ title: "Status Atualizado!", description: `A OS ${order.osNumber} foi marcada como pronta.`})
-  }
-
-  const handlePayment = async (method: 'PIX' | 'Cartão' | 'Dinheiro') => {
-    if (selectedOrder) {
-      const orderRef = doc(db, "serviceOrders", selectedOrder.id);
-      await updateDoc(orderRef, { status: 'Entregue', paymentMethod: method });
-    }
-    setSelectedOrder(null)
   }
 
   return (
@@ -131,11 +123,11 @@ export function OsTable({ orders, onPrint }: OsTableProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                      <NewOsSheet isEditing order={order} onPrint={onPrint} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                      <NewOsSheet isEditing order={order} onPrint={onPrint} onDeliver={onDeliver} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
                       <DropdownMenuItem onClick={() => onPrint(order)}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleMarkAsReady(order)} disabled={order.status === 'Pronta' || order.status === 'Entregue'}>Marcar como Pronta</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setSelectedOrder(order)} disabled={order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onDeliver(order)} disabled={order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -144,13 +136,6 @@ export function OsTable({ orders, onPrint }: OsTableProps) {
           </TableBody>
         </Table>
       </div>
-      {selectedOrder && (
-        <PaymentDialog
-          order={selectedOrder}
-          onOpenChange={(isOpen) => !isOpen && setSelectedOrder(null)}
-          onConfirm={handlePayment}
-        />
-      )}
     </>
   )
 }

@@ -13,11 +13,12 @@ interface OsTabsProps {
   onTabChange: (value: string) => void;
   activeTab: string;
   onPrint: (order: ServiceOrder) => void;
+  onDeliver: (order: ServiceOrder) => void;
   dateFilter: DateFilter;
   onDateFilterChange: (filter: DateFilter) => void;
 }
 
-export default function OsTabs({ orders, onTabChange, activeTab, onPrint, dateFilter, onDateFilterChange }: OsTabsProps) {
+export default function OsTabs({ orders, onTabChange, activeTab, onPrint, onDeliver, dateFilter, onDateFilterChange }: OsTabsProps) {
   return (
     <div className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -25,7 +26,7 @@ export default function OsTabs({ orders, onTabChange, activeTab, onPrint, dateFi
           Ordens de Serviço
         </h1>
         <div className="flex items-center gap-2">
-            <NewOsSheet onPrint={onPrint} />
+            <NewOsSheet onPrint={onPrint} onDeliver={onDeliver} />
         </div>
       </div>
       <div className="flex items-center justify-between">
@@ -54,10 +55,10 @@ export default function OsTabs({ orders, onTabChange, activeTab, onPrint, dateFi
             className="flex-1 flex flex-col mt-4"
         >
             <TabsContent value="kanban" className="flex-1 mt-0">
-                <OsKanbanBoard orders={orders} onPrint={onPrint} />
+                <OsKanbanBoard orders={orders} onPrint={onPrint} onDeliver={onDeliver} />
             </TabsContent>
             <TabsContent value="lista" className="mt-0">
-                <OsTable orders={orders} onPrint={onPrint} />
+                <OsTable orders={orders} onPrint={onPrint} onDeliver={onDeliver} />
             </TabsContent>
         </Tabs>
     </div>

@@ -7,11 +7,15 @@ import OsTabs from '@/components/os/os-tabs';
 import { OsReceipt } from '@/components/os/os-receipt';
 import type { ServiceOrder } from '@/lib/types';
 import { useServiceOrders, type DateFilter } from '@/hooks/useServiceOrders';
+import { PaymentDialog } from '@/components/os/payment-dialog';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function OsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('lista');
   const [orderToPrint, setOrderToPrint] = useState<ServiceOrder | null>(null);
+  const [orderToDeliver, setOrderToDeliver] = useState<ServiceOrder | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const { orders } = useServiceOrders(dateFilter);
 
@@ -32,6 +36,18 @@ export default function OsPage() {
     }, 100);
   }
 
+  const handleDeliver = (order: ServiceOrder) => {
+    setOrderToDeliver(order);
+  }
+
+  const handlePaymentConfirm = async (method: ServiceOrder['paymentMethod']) => {
+    if(orderToDeliver){
+       const orderRef = doc(db, "serviceOrders", orderToDeliver.id);
+       await updateDoc(orderRef, { status: 'Entregue', paymentMethod: method });
+    }
+    setOrderToDeliver(null);
+  }
+
   return (
     <AppShell sidebarOpen={sidebarOpen} onSidebarOpenChange={setSidebarOpen}>
       <OsTabs 
@@ -39,10 +55,12 @@ export default function OsPage() {
         onTabChange={handleTabChange} 
         activeTab={activeTab} 
         onPrint={handlePrint}
+        onDeliver={handleDeliver}
         dateFilter={dateFilter}
         onDateFilterChange={setDateFilter}
        />
        {orderToPrint && <OsReceipt order={orderToPrint} />}
+       {orderToDeliver && <PaymentDialog order={orderToDeliver} onConfirm={handlePaymentConfirm} onOpenChange={(isOpen) => !isOpen && setOrderToDeliver(null)} />}
     </AppShell>
   );
 }
