@@ -1,14 +1,34 @@
 
+
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, getDoc, query, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, doc, getDoc, query, orderBy, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ServiceOrder, ServiceOrderDocument } from "@/lib/types";
 
-export function useServiceOrders() {
+export type DateFilter = 'all' | 'today' | 'yesterday';
+
+export function useServiceOrders(filter: DateFilter = 'all') {
     const [orders, setOrders] = useState<ServiceOrder[]>([]);
 
     useEffect(() => {
-        const q = query(collection(db, "serviceOrders"), orderBy("osNumber", "asc"));
+        let q = query(collection(db, "serviceOrders"), orderBy("osNumber", "desc"));
+
+        if (filter !== 'all') {
+            const now = new Date();
+            let start, end;
+
+            if (filter === 'today') {
+                start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+                end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+            } else { // yesterday
+                const yesterday = new Date(now);
+                yesterday.setDate(now.getDate() - 1);
+                start = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0);
+                end = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59);
+            }
+            
+            q = query(q, where('createdAt', '>=', Timestamp.fromDate(start)), where('createdAt', '<=', Timestamp.fromDate(end)));
+        }
         
         const unsubscribe = onSnapshot(q, async (snapshot) => {
             const ordersDataPromises = snapshot.docs.map(async (d) => {
@@ -49,7 +69,7 @@ export function useServiceOrders() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [filter]);
 
     return { orders };
 }

@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, DragEvent, useEffect } from 'react';
@@ -20,8 +21,6 @@ import { doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useServiceOrders } from '@/hooks/useServiceOrders';
-
 
 type Status = ServiceOrder['status'];
 
@@ -66,11 +65,11 @@ function SlaTimer({ date }: { date: Date }) {
 }
 
 interface OsKanbanBoardProps {
+  orders: ServiceOrder[];
   onPrint: (order: ServiceOrder) => void;
 }
 
-export function OsKanbanBoard({ onPrint }: OsKanbanBoardProps) {
-  const { orders } = useServiceOrders();
+export function OsKanbanBoard({ orders, onPrint }: OsKanbanBoardProps) {
   const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
   const [paymentOrder, setPaymentOrder] = useState<ServiceOrder | null>(null);
   const { toast } = useToast();

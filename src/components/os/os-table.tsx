@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -26,7 +27,6 @@ import { NewOsSheet } from "./new-os-sheet"
 import { doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useToast } from "@/hooks/use-toast"
-import { useServiceOrders } from '@/hooks/useServiceOrders';
 
 
 function getStatusVariant(status: ServiceOrder['status']) {
@@ -70,12 +70,12 @@ function SlaTimer({ date }: { date: Date }) {
 }
 
 interface OsTableProps {
+  orders: ServiceOrder[];
   onPrint: (order: ServiceOrder) => void;
 }
 
 
-export function OsTable({ onPrint }: OsTableProps) {
-  const { orders } = useServiceOrders();
+export function OsTable({ orders, onPrint }: OsTableProps) {
   const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null);
   const { toast } = useToast();
 
