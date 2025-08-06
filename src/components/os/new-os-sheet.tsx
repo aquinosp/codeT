@@ -92,19 +92,24 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
   
   const fetchNewOsNumber = async () => {
     if (!isEditing) {
-      const q = query(collection(db, "serviceOrders"), orderBy("osNumber", "desc"), limit(1));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const lastOsNumber = querySnapshot.docs[0].data().osNumber;
-        const lastNumber = parseInt(lastOsNumber?.split('-')[1] || '0', 10);
-        const newNumber = isNaN(lastNumber) ? 1 : lastNumber + 1;
+        const q = query(collection(db, "serviceOrders"));
+        const querySnapshot = await getDocs(q);
+        let lastNumber = 0;
+        if (!querySnapshot.empty) {
+            querySnapshot.forEach(doc => {
+                const osNumber = doc.data().osNumber;
+                const numberPart = parseInt(osNumber?.split('-')[1] || '0', 10);
+                if (!isNaN(numberPart) && numberPart > lastNumber) {
+                    lastNumber = numberPart;
+                }
+            });
+        }
+        const newNumber = lastNumber + 1;
         const newOsNumber = `OS-${newNumber.toString().padStart(4, '0')}`;
         form.setValue("osNumber", newOsNumber);
-      } else {
-        form.setValue("osNumber", "OS-0001");
-      }
     }
   };
+
 
   useEffect(() => {
     if (isOpen) {
@@ -496,3 +501,5 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
     </Sheet>
   )
 }
+
+    
