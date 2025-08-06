@@ -73,7 +73,10 @@ async function getDashboardData(period: Period) {
     .filter(o => o.status === 'Entregue')
     .reduce((acc, o) => acc + o.total, 0);
 
-  const openServiceOrders = serviceOrders.filter(o => o.status !== 'Entregue').length;
+  const openOrders = serviceOrders.filter(o => o.status !== 'Entregue');
+  const openServiceOrders = openOrders.length;
+  const openServiceOrdersValue = openOrders.reduce((acc, o) => acc + o.total, 0);
+
 
   const newCustomers = people.filter(p => p.type === 'Cliente').length;
 
@@ -110,6 +113,7 @@ async function getDashboardData(period: Period) {
   return {
     monthlyRevenue,
     openServiceOrders,
+    openServiceOrdersValue,
     newCustomers,
     monthlyPurchases,
     osStatusData: osStatusData.map(d => ({...d, name: d.status})),
@@ -140,4 +144,3 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     </AppShell>
   );
 }
-

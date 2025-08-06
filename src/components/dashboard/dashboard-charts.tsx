@@ -53,6 +53,7 @@ export type Period = 'today' | 'week' | 'month' | 'year';
 interface DashboardChartsProps {
     monthlyRevenue: number;
     openServiceOrders: number;
+    openServiceOrdersValue: number;
     newCustomers: number;
     monthlyPurchases: number;
     osStatusData: { status: string; count: number, name: string }[];
@@ -97,6 +98,7 @@ function DateFilter({ currentPeriod }: { currentPeriod: Period }) {
 export function DashboardCharts({ 
     monthlyRevenue,
     openServiceOrders,
+    openServiceOrdersValue,
     newCustomers,
     monthlyPurchases,
     osStatusData,
@@ -126,8 +128,8 @@ export function DashboardCharts({
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{openServiceOrders}</div>
-              <p className="text-xs text-accent-foreground/80">
-                Aguardando, Pendente e Em Progresso
+              <p className="text-sm font-medium text-accent-foreground/80">
+                {openServiceOrdersValue.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
               </p>
             </CardContent>
           </Card>
