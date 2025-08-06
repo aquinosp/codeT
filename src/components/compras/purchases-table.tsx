@@ -14,42 +14,24 @@ import { Calendar as CalendarIcon, Download, MoreHorizontal } from "lucide-react
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { NewPurchaseSheet } from "./new-purchase-sheet"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import type { Purchase } from "@/lib/types"
-import { collection, doc, getDoc, onSnapshot, query, orderBy } from "firebase/firestore"
-import { db } from "@/lib/firebase"
 import { Badge } from "../ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "../ui/dropdown-menu"
+import type { DateRange } from "react-day-picker"
+
+interface PurchasesTableProps {
+  purchases: Purchase[];
+}
 
 
-export function PurchasesTable() {
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
+export function PurchasesTable({ purchases }: PurchasesTableProps) {
+  const [dateFilter, setDateFilter] = useState<DateRange | undefined>();
 
-   useEffect(() => {
-    const q = query(collection(db, "purchases"), orderBy("paymentDate", "desc"));
-
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
-        const purchaseList = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-
-        const purchasesData = await Promise.all(purchaseList.map(async (p: any) => {
-            if (!p.supplierId) return null;
-
-            const supplierDoc = await getDoc(doc(db, "people", p.supplierId));
-            if (!supplierDoc.exists()) return null;
-
-            return {
-                id: p.id,
-                ...p,
-                supplier: { id: supplierDoc.id, ...supplierDoc.data() },
-                paymentDate: (p.paymentDate).toDate(),
-            } as Purchase;
-        }));
-        
-        setPurchases(purchasesData.filter(Boolean) as Purchase[]);
-    });
-
-    return () => unsubscribe();
-  }, []);
+  const filteredPurchases = purchases.filter(purchase => {
+    if (!dateFilter?.from || !dateFilter?.to) return true;
+    return purchase.paymentDate >= dateFilter.from && purchase.paymentDate <= dateFilter.to;
+  })
 
   const getBadgeVariant = (status: Purchase['status']) => {
     switch (status) {
@@ -74,7 +56,7 @@ export function PurchasesTable() {
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                        <Calendar mode="range" />
+                        <Calendar mode="range" selected={dateFilter} onSelect={setDateFilter} />
                     </PopoverContent>
                 </Popover>
                  <Button variant="outline" size="icon">
@@ -98,7 +80,7 @@ export function PurchasesTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {purchases.map((purchase) => (
+            {filteredPurchases.map((purchase) => (
               <TableRow key={purchase.id}>
                 <TableCell className="font-medium">{purchase.invoice || '-'}</TableCell>
                 <TableCell>{purchase.supplier.name}</TableCell>
