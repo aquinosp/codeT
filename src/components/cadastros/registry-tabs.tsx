@@ -14,7 +14,7 @@ export function RegistryTabs() {
 
   return (
     <Tabs defaultValue="people" className="flex-1 flex flex-col" onValueChange={setActiveTab}>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <TabsList className="grid w-full grid-cols-2 md:w-80">
           <TabsTrigger value="people">Pessoas</TabsTrigger>
           <TabsTrigger value="products">Produtos</TabsTrigger>
@@ -29,10 +29,10 @@ export function RegistryTabs() {
           />
         </div>
       </div>
-      <TabsContent value="people" className="mt-4">
+      <TabsContent value="people" className="mt-0 flex-1">
         <PeopleTable searchTerm={searchTerm} />
       </TabsContent>
-      <TabsContent value="products" className="mt-4">
+      <TabsContent value="products" className="mt-0 flex-1">
         <ProductsTable searchTerm={searchTerm} />
       </TabsContent>
     </Tabs>
