@@ -10,10 +10,10 @@ import { useAppSettings } from '@/context/app-settings-context';
 
 
 const menuItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/os', label: 'Ordens de Serviço', icon: Wrench },
   { href: '/compras', label: 'Compras', icon: ShoppingCart },
   { href: '/cadastros', label: 'Cadastros', icon: ClipboardList },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
