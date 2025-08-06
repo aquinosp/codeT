@@ -11,7 +11,7 @@ export function OsReceipt({ order }: OsReceiptProps) {
     const subTotal = order.items.reduce((acc, item) => acc + item.total, 0);
 
     return (
-        <div id="print-receipt" className="p-2 bg-white text-black text-xs">
+        <div id="print-receipt" className="p-2 bg-white text-black">
             <div className="mx-auto">
                 <div className="text-center space-y-2 mb-4">
                     <div className="flex justify-center">
@@ -26,20 +26,20 @@ export function OsReceipt({ order }: OsReceiptProps) {
                             </svg>
                          )}
                     </div>
-                    <h1 className="font-bold text-sm tracking-wider">COMPROVANTE DE PEDIDO</h1>
-                    <p className="text-xs">{appName}</p>
-                    <p className="text-xs">CNPJ: 40.986.949/0001-27</p>
-                    <p className="text-xs">Telefone: (41) 94042-3002</p>
-                    <h2 className="font-bold text-base pt-1">PEDIDO {order.osNumber}</h2>
+                    <h1 className="font-bold text-lg tracking-wider">COMPROVANTE DE PEDIDO</h1>
+                    <p className="text-sm">{appName}</p>
+                    <p className="text-sm">CNPJ: 40.986.949/0001-27</p>
+                    <p className="text-sm">Telefone: (41) 94042-3002</p>
+                    <h2 className="font-bold text-xl pt-1">PEDIDO {order.osNumber}</h2>
                 </div>
 
-                <div className="space-y-1 mb-2 border-t border-b border-dashed border-black py-2">
+                <div className="space-y-1 mb-2 border-t border-b border-dashed border-black py-2 text-sm">
                     <p><span className="font-bold">CLIENTE:</span> {order.customer?.name || 'Não informado'}</p>
                     <p><span className="font-bold">TELEFONE:</span> {order.customer?.phone || 'Não informado'}</p>
                     <p><span className="font-bold">TÉCNICO:</span> {order.technician || 'Não informado'}</p>
                 </div>
 
-                <div className="border-b-2 border-dashed border-black pb-2">
+                <div className="border-b-2 border-dashed border-black pb-2 text-sm">
                     <div className="grid grid-cols-[1fr,40px,50px,50px] gap-x-2 font-bold mb-1">
                         <span>DESCRIÇÃO</span>
                         <span className="text-center">QTD</span>
@@ -56,7 +56,7 @@ export function OsReceipt({ order }: OsReceiptProps) {
                     ))}
                 </div>
 
-                <div className="mt-2 space-y-1 text-xs">
+                <div className="mt-2 space-y-1 text-sm">
                     <div className="flex justify-between">
                         <span>VALOR BRUTO</span>
                         <span>{subTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
@@ -69,21 +69,21 @@ export function OsReceipt({ order }: OsReceiptProps) {
                         <span>DESCONTO</span>
                         <span>- {(order.discount || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                     </div>
-                    <div className="flex justify-between font-bold text-sm pt-2 border-t border-dashed border-black mt-2">
+                    <div className="flex justify-between font-bold text-base pt-2 border-t border-dashed border-black mt-2">
                         <span>LÍQUIDO TOTAL</span>
                         <span>{order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                     </div>
                 </div>
 
                  {order.description && (
-                    <div className="mt-2 pt-2 border-t border-dashed border-black">
+                    <div className="mt-2 pt-2 border-t border-dashed border-black text-sm">
                         <p className="font-bold">OBSERVAÇÕES:</p>
                         <p>{order.description}</p>
                     </div>
                  )}
 
 
-                <div className="text-center mt-6 text-[10px]">
+                <div className="text-center mt-6 text-xs">
                     <p>Volte sempre!</p>
                     <p>Data: {format(order.createdAt, "dd/MM/yyyy HH:mm:ss")}</p>
                 </div>
