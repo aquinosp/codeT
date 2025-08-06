@@ -31,7 +31,7 @@ const columnTitles: Record<Status, string> = {
   'Em Progresso': 'Em Progresso',
   'Aguardando Peças': 'Aguardando Peças',
   'Pronta': 'Pronta',
-  'Entregue': 'Entregue',
+  'Entregue': 'Entregue e Cancelada',
   'Cancelada': 'Cancelada',
 };
 
@@ -41,7 +41,7 @@ const columnColors: Record<Status, string> = {
     'Aguardando Peças': 'bg-orange-100 dark:bg-orange-900/40',
     'Pronta': 'bg-purple-100 dark:bg-purple-900/40',
     'Entregue': 'bg-green-100 dark:bg-green-900/40',
-    'Cancelada': 'bg-red-100 dark:bg-red-900/40',
+    'Cancelada': 'bg-gray-200 dark:bg-gray-800/40',
 };
 
 function SlaTimer({ date }: { date: Date }) {
@@ -134,13 +134,21 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
           <h2 className="text-lg font-semibold">{columnTitles[status]}</h2>
           <div className="flex-1 space-y-4">
             {orders
-              .filter(order => order.status === status)
+              .filter(order => {
+                  if (status === 'Entregue') {
+                      return order.status === 'Entregue' || order.status === 'Cancelada';
+                  }
+                  return order.status === status;
+              })
               .map(order => (
                 <Card
                   key={order.id}
-                  draggable
+                  draggable={order.status !== 'Cancelada'}
                   onDragStart={(e) => handleDragStart(e, order.id)}
-                  className={`cursor-grab active:cursor-grabbing ${draggedOrder === order.id ? 'opacity-50' : ''}`}
+                  className={cn('cursor-grab active:cursor-grabbing', 
+                    draggedOrder === order.id ? 'opacity-50' : '',
+                    order.status === 'Cancelada' && 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed'
+                  )}
                 >
                   <CardHeader className="p-4 flex-row items-center justify-between">
                      <CardTitle className="text-base">{order.osNumber}</CardTitle>
@@ -152,13 +160,13 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <NewOsSheet isEditing order={order} onPrint={onPrint} onDeliver={onDeliver} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                        <NewOsSheet isEditing order={order} onPrint={onPrint} onDeliver={onDeliver} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={order.status === 'Cancelada'}>Editar</DropdownMenuItem>} />
                         <DropdownMenuItem onClick={() => onPrint(order)}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleSetStatus(order.id, 'Pronta')}>Marcar como Pronta</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDeliver(order)}>Registrar Entrega</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSetStatus(order.id, 'Pronta')} disabled={order.status === 'Cancelada' || order.status === 'Entregue'}>Marcar como Pronta</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onDeliver(order)} disabled={order.status === 'Cancelada' || order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setOrderToCancel(order)} className="text-red-500 hover:text-red-500 focus:text-red-500">
+                        <DropdownMenuItem onClick={() => setOrderToCancel(order)} className="text-red-500 hover:text-red-500 focus:text-red-500" disabled={order.status === 'Cancelada'}>
                          <Trash2 className="mr-2 h-4 w-4" />
                          Cancelar OS
                        </DropdownMenuItem>
@@ -169,8 +177,8 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
                     <p className="text-sm font-medium">{order.customer?.name || 'Não informado'}</p>
                     <p className="text-sm text-muted-foreground truncate">{order.description}</p>
                     <div className="mt-2 flex justify-between items-center">
-                       <Badge variant="secondary">{order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Badge>
-                       {order.status !== 'Entregue' && order.status !== 'Pronta' && <SlaTimer date={order.createdAt} />}
+                       <Badge variant={order.status === 'Cancelada' ? 'secondary' : 'default'}>{order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Badge>
+                       {order.status !== 'Entregue' && order.status !== 'Pronta' && order.status !== 'Cancelada' && <SlaTimer date={order.createdAt} />}
                     </div>
                   </CardContent>
                 </Card>

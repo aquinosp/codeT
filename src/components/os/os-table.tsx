@@ -39,7 +39,7 @@ function getStatusVariant(status: ServiceOrder['status']) {
     case 'Em Progresso':
       return 'secondary'
     case 'Aguardando Peças':
-        return 'destructive'
+        return 'outline'
     case 'Cancelada':
         return 'destructive'
     case 'Pendente':
@@ -119,14 +119,14 @@ export function OsTable({ orders, onPrint, onDeliver }: OsTableProps) {
           </TableHeader>
           <TableBody>
             {orders.map((order) => (
-              <TableRow key={order.id}>
+              <TableRow key={order.id} className={order.status === 'Cancelada' ? 'bg-gray-100 dark:bg-gray-900/50' : ''}>
                 <TableCell className="font-medium">{order.osNumber}</TableCell>
                 <TableCell>{order.customer?.name || 'Não informado'}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                 </TableCell>
                 <TableCell>
-                  {order.status !== 'Entregue' && order.status !== 'Pronta' ? <SlaTimer date={order.createdAt} /> : '-'}
+                  {order.status !== 'Entregue' && order.status !== 'Pronta' && order.status !== 'Cancelada' ? <SlaTimer date={order.createdAt} /> : '-'}
                 </TableCell>
                 <TableCell className="text-right">
                   {order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -141,13 +141,13 @@ export function OsTable({ orders, onPrint, onDeliver }: OsTableProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                      <NewOsSheet isEditing order={order} onPrint={onPrint} onDeliver={onDeliver} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                      <NewOsSheet isEditing order={order} onPrint={onPrint} onDeliver={onDeliver} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={order.status === 'Cancelada'}>Editar</DropdownMenuItem>} />
                       <DropdownMenuItem onClick={() => onPrint(order)}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleMarkAsReady(order)} disabled={order.status === 'Pronta' || order.status === 'Entregue'}>Marcar como Pronta</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onDeliver(order)} disabled={order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleMarkAsReady(order)} disabled={order.status === 'Pronta' || order.status === 'Entregue' || order.status === 'Cancelada'}>Marcar como Pronta</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onDeliver(order)} disabled={order.status === 'Entregue' || order.status === 'Cancelada'}>Registrar Entrega</DropdownMenuItem>
                        <DropdownMenuSeparator />
-                       <DropdownMenuItem onClick={() => setOrderToCancel(order)} className="text-red-500 hover:text-red-500 focus:text-red-500">
+                       <DropdownMenuItem onClick={() => setOrderToCancel(order)} className="text-red-500 hover:text-red-500 focus:text-red-500" disabled={order.status === 'Cancelada'}>
                          <Trash2 className="mr-2 h-4 w-4" />
                          Cancelar OS
                        </DropdownMenuItem>

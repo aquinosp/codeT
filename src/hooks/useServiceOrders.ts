@@ -28,10 +28,6 @@ export function useServiceOrders(filter?: DateRangeFilter) {
             const ordersDataPromises = snapshot.docs.map(async (d) => {
                 const orderData = d.data() as ServiceOrderDocument;
 
-                if (orderData.status === 'Cancelada') {
-                    return null;
-                }
-
                 let customer;
                 if (orderData.customerId) {
                   const customerDoc = await getDoc(doc(db, "people", orderData.customerId));
