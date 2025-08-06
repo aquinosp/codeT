@@ -77,6 +77,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 installments: parseInt(purchase.installments) || 1,
                 supplierId: purchase.supplier.id,
                 invoice: purchase.invoice || '',
+                status: purchase.status || 'Previsão',
             });
         } else {
             form.reset({
