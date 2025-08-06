@@ -38,8 +38,8 @@ export default function OsPage() {
   const handlePrint = (order: ServiceOrder) => {
     setOrderToPrint(order);
     setTimeout(() => {
-        window.print();
-        setOrderToPrint(null);
+      window.print();
+      setOrderToPrint(null);
     }, 100);
   }
 
