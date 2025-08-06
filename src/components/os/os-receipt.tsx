@@ -11,7 +11,7 @@ export function OsReceipt({ order }: OsReceiptProps) {
     const subTotal = order.items.reduce((acc, item) => acc + item.total, 0);
 
     return (
-        <div id="print-receipt" className="p-2 bg-white text-black font-mono text-xs">
+        <div id="print-receipt" className="p-2 bg-white text-black text-xs">
             <div className="mx-auto">
                 <div className="text-center space-y-2 mb-4">
                     <div className="flex justify-center">
