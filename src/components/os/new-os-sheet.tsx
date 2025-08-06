@@ -92,7 +92,7 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
   
   const fetchNewOsNumber = async () => {
     if (!isEditing) {
-      const q = query(collection(db, "serviceOrders"), orderBy("createdAt", "desc"), limit(1));
+      const q = query(collection(db, "serviceOrders"), orderBy("osNumber", "desc"), limit(1));
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
         const lastOsNumber = querySnapshot.docs[0].data().osNumber;
