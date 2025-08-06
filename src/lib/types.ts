@@ -39,7 +39,7 @@ export type ServiceOrder = {
   customer?: Person;
   technician: string;
   description: string;
-  status: 'Pendente' | 'Em Progresso' | 'Aguardando Peças' | 'Pronta' | 'Entregue';
+  status: 'Pendente' | 'Em Progresso' | 'Aguardando Peças' | 'Pronta' | 'Entregue' | 'Cancelada';
   createdAt: Date;
   items: ServiceOrderItem[];
   total: number;

@@ -3,7 +3,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MoreHorizontal, Timer, Printer } from "lucide-react"
+import { MoreHorizontal, Timer, Printer, Trash2 } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -23,11 +23,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import type { ServiceOrder } from "@/lib/types"
-import { PaymentDialog } from "./payment-dialog"
 import { NewOsSheet } from "./new-os-sheet"
 import { doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useToast } from "@/hooks/use-toast"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog"
 
 
 function getStatusVariant(status: ServiceOrder['status']) {
@@ -39,6 +39,8 @@ function getStatusVariant(status: ServiceOrder['status']) {
     case 'Em Progresso':
       return 'secondary'
     case 'Aguardando Peças':
+        return 'destructive'
+    case 'Cancelada':
         return 'destructive'
     case 'Pendente':
       return 'outline'
@@ -79,12 +81,27 @@ interface OsTableProps {
 
 export function OsTable({ orders, onPrint, onDeliver }: OsTableProps) {
   const { toast } = useToast();
+  const [orderToCancel, setOrderToCancel] = useState<ServiceOrder | null>(null);
 
   const handleMarkAsReady = async (order: ServiceOrder) => {
     const orderRef = doc(db, "serviceOrders", order.id);
     await updateDoc(orderRef, { status: 'Pronta' });
     toast({ title: "Status Atualizado!", description: `A OS ${order.osNumber} foi marcada como pronta.`})
   }
+  
+  const handleCancelConfirm = async () => {
+    if (orderToCancel) {
+      const orderRef = doc(db, "serviceOrders", orderToCancel.id);
+      await updateDoc(orderRef, { status: 'Cancelada' });
+      toast({
+        title: "OS Cancelada",
+        description: `A OS ${orderToCancel.osNumber} foi cancelada com sucesso.`,
+        variant: "destructive"
+      });
+      setOrderToCancel(null);
+    }
+  };
+
 
   return (
     <>
@@ -129,6 +146,11 @@ export function OsTable({ orders, onPrint, onDeliver }: OsTableProps) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleMarkAsReady(order)} disabled={order.status === 'Pronta' || order.status === 'Entregue'}>Marcar como Pronta</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onDeliver(order)} disabled={order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>
+                       <DropdownMenuSeparator />
+                       <DropdownMenuItem onClick={() => setOrderToCancel(order)} className="text-red-500 hover:text-red-500 focus:text-red-500">
+                         <Trash2 className="mr-2 h-4 w-4" />
+                         Cancelar OS
+                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -137,6 +159,24 @@ export function OsTable({ orders, onPrint, onDeliver }: OsTableProps) {
           </TableBody>
         </Table>
       </div>
+       {orderToCancel && (
+        <AlertDialog open onOpenChange={(isOpen) => !isOpen && setOrderToCancel(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Cancelamento</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja cancelar a OS <span className="font-bold">{orderToCancel.osNumber}</span>? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Voltar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleCancelConfirm} className="bg-destructive hover:bg-destructive/90">
+                Sim, cancelar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </>
   )
 }
