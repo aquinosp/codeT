@@ -57,7 +57,13 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
   const form = useForm<z.infer<typeof purchaseSchema>>({
     resolver: zodResolver(purchaseSchema),
     defaultValues: {
+      supplierId: '',
+      itemName: '',
+      invoice: '',
       installments: 1,
+      total: undefined,
+      paymentDate: new Date(),
+      status: 'Previsão',
     }
   });
 
@@ -70,10 +76,15 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 ...purchase,
                 installments: parseInt(purchase.installments) || 1,
                 supplierId: purchase.supplier.id,
+                invoice: purchase.invoice || '',
             });
         } else {
             form.reset({
+                supplierId: '',
+                itemName: '',
+                invoice: '',
                 installments: 1,
+                total: undefined,
                 paymentDate: new Date(),
                 status: 'Previsão',
             });
