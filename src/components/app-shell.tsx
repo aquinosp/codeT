@@ -31,8 +31,8 @@ export default function AppShell({ children, sidebarOpen, onSidebarOpenChange }:
     <SidebarProvider open={sidebarOpen} onOpenChange={onSidebarOpenChange}>
       <div className="flex min-h-screen bg-background">
         <Sidebar side="left" collapsible="icon" variant="sidebar">
-          <SidebarHeader>
-            <div className="flex items-center gap-3 p-4">
+          <SidebarHeader className='p-2'>
+            <div className="flex items-center gap-3 p-2">
                {logoUrl ? (
                   <img src={logoUrl} alt="Logo" className="h-8 w-auto" />
                 ) : (
