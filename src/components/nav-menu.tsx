@@ -54,12 +54,12 @@ export default function NavMenu() {
                         <SidebarMenuSub>
                             {item.subItems.map(subItem => (
                                  <SidebarMenuSubItem key={subItem.href}>
-                                    <Link href={subItem.href} passHref legacyBehavior>
-                                        <SidebarMenuSubButton isActive={pathname === subItem.href}>
+                                    <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                                        <Link href={subItem.href}>
                                             <subItem.icon className="h-4 w-4" />
                                             <span>{subItem.label}</span>
-                                        </SidebarMenuSubButton>
-                                    </Link>
+                                        </Link>
+                                    </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
                             ))}
                         </SidebarMenuSub>
@@ -91,4 +91,3 @@ export default function NavMenu() {
     </div>
   );
 }
-
