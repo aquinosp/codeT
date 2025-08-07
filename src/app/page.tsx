@@ -1,7 +1,7 @@
 
 import { collection, getDocs, query, Timestamp, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import type { ServiceOrderDocument, Purchase, Person } from "@/lib/types"
+import type { ServiceOrderDocument, Purchase, Person, PurchaseDocument } from "@/lib/types"
 
 import AppShell from "@/components/app-shell"
 import { DashboardCharts, type Period } from "@/components/dashboard/dashboard-charts"
@@ -66,25 +66,27 @@ async function getDashboardData(period: Period) {
 
   const serviceOrders = soSnapshot.docs.map(doc => ({ ...doc.data() as ServiceOrderDocument, id: doc.id }));
   const people = peopleSnapshot.docs.map(doc => ({ ...doc.data() as Person, id: doc.id }));
-  const purchases = purchasesSnapshot.docs.map(doc => ({ ...doc.data() as Purchase, id: doc.id }));
+  const purchases = purchasesSnapshot.docs.map(doc => ({ ...doc.data() as PurchaseDocument, id: doc.id }));
 
   // Metrics
   const monthlyRevenue = serviceOrders
     .filter(o => o.status === 'Entregue')
     .reduce((acc, o) => acc + o.total, 0);
 
-  const openOrders = serviceOrders.filter(o => o.status !== 'Entregue');
+  const openOrders = serviceOrders.filter(o => o.status !== 'Entregue' && o.status !== 'Cancelada');
   const openServiceOrders = openOrders.length;
   const openServiceOrdersValue = openOrders.reduce((acc, o) => acc + o.total, 0);
 
 
   const newCustomers = people.filter(p => p.type === 'Cliente').length;
 
-  const monthlyPurchases = purchases.reduce((acc, p) => acc + p.total, 0);
+  const monthlyPurchases = purchases
+    .filter(p => p.status === 'Pago')
+    .reduce((acc, p) => acc + p.total, 0);
 
   // Chart Data
   const osStatusData = serviceOrders
-    .filter(o => o.status !== 'Entregue')
+    .filter(o => o.status !== 'Entregue' && o.status !== 'Cancelada')
     .reduce((acc, o) => {
       const status = o.status;
       const existing = acc.find(item => item.status === status);
@@ -105,10 +107,35 @@ async function getDashboardData(period: Period) {
         if(existing) {
             existing.revenue += o.total;
         } else {
-            acc.push({ month, revenue: o.total });
+            acc.push({ month, revenue: o.total, purchases: 0 });
         }
         return acc;
-    }, [] as { month: string, revenue: number }[]);
+    }, [] as { month: string, revenue: number, purchases: number }[]);
+
+  const purchasesByMonth = purchases
+    .filter(p => p.status === 'Pago')
+    .reduce((acc, p) => {
+      const month = p.paymentDate.toDate().toLocaleString('default', { month: 'short' });
+      const existing = acc.find(item => item.month === month);
+      if (existing) {
+        existing.purchases += p.total;
+      } else {
+        acc.push({ month, revenue: 0, purchases: p.total });
+      }
+      return acc;
+    }, [] as { month: string, revenue: number, purchases: number }[]);
+
+  const monthlyFinancials = [...revenueByMonth];
+
+  purchasesByMonth.forEach(p => {
+    const existing = monthlyFinancials.find(item => item.month === p.month);
+    if (existing) {
+      existing.purchases = p.purchases;
+    } else {
+      monthlyFinancials.push(p);
+    }
+  });
+
 
   return {
     monthlyRevenue,
@@ -117,7 +144,7 @@ async function getDashboardData(period: Period) {
     newCustomers,
     monthlyPurchases,
     osStatusData: osStatusData.map(d => ({...d, name: d.status})),
-    revenueByMonth
+    monthlyFinancials
   }
 }
 

@@ -3,7 +3,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList } from "recharts"
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList, CartesianGrid } from "recharts"
 import { DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 
@@ -26,6 +26,10 @@ const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
     revenue: {
         label: "Receita",
         color: "hsl(var(--chart-1))",
+    },
+    purchases: {
+        label: "Despesas",
+        color: "hsl(var(--chart-2))",
     },
     count: {
         label: "OS",
@@ -57,7 +61,7 @@ interface DashboardChartsProps {
     newCustomers: number;
     monthlyPurchases: number;
     osStatusData: { status: string; count: number, name: string }[];
-    revenueByMonth: { month: string, revenue: number }[];
+    monthlyFinancials: { month: string, revenue: number, purchases: number }[];
     period: Period;
 }
 
@@ -102,7 +106,7 @@ export function DashboardCharts({
     newCustomers,
     monthlyPurchases,
     osStatusData,
-    revenueByMonth,
+    monthlyFinancials,
     period
 }: DashboardChartsProps) {
   return (
@@ -161,12 +165,13 @@ export function DashboardCharts({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="lg:col-span-4">
             <CardHeader>
-              <CardTitle>Receitas Mensais</CardTitle>
+              <CardTitle>Visão Financeira Mensal</CardTitle>
             </CardHeader>
             <CardContent className="pl-2">
               <ChartContainer config={chartConfig} className="h-[300px] w-full">
                  <ResponsiveContainer>
-                    <BarChart data={revenueByMonth}>
+                    <BarChart data={monthlyFinancials}>
+                        <CartesianGrid vertical={false} />
                         <XAxis
                         dataKey="month"
                         tickLine={false}
@@ -178,9 +183,15 @@ export function DashboardCharts({
                          cursor={false}
                          content={<ChartTooltipContent indicator="dot" />}
                         />
+                        <ChartLegend content={<ChartLegendContent />} />
                         <Bar
                           dataKey="revenue"
                           fill="var(--color-revenue)"
+                          radius={4}
+                        />
+                         <Bar
+                          dataKey="purchases"
+                          fill="var(--color-purchases)"
                           radius={4}
                         />
                     </BarChart>
