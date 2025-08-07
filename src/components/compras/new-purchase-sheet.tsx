@@ -78,6 +78,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 supplierId: purchase.supplier.id,
                 invoice: purchase.invoice || '',
                 status: purchase.status || 'Previsão',
+                total: purchase.total || undefined,
             });
         } else {
             form.reset({
@@ -249,7 +250,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                             <FormItem>
                                 <FormLabel>Valor Total (R$)</FormLabel>
                                 <FormControl>
-                                 <Input type="number" placeholder="R$ 0,00" {...field} disabled={isPaid} />
+                                 <Input type="number" placeholder="R$ 0,00" {...field} value={field.value ?? ""} disabled={isPaid} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
