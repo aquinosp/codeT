@@ -61,7 +61,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
       itemName: '',
       invoice: '',
       installments: 1,
-      total: undefined,
+      total: 0,
       paymentDate: new Date(),
       status: 'Previsão',
     }
@@ -78,7 +78,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 supplierId: purchase.supplier.id,
                 invoice: purchase.invoice || '',
                 status: purchase.status || 'Previsão',
-                total: purchase.total || undefined,
+                total: purchase.total || 0,
             });
         } else {
             form.reset({
@@ -86,7 +86,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 itemName: '',
                 invoice: '',
                 installments: 1,
-                total: undefined,
+                total: 0,
                 paymentDate: new Date(),
                 status: 'Previsão',
             });
@@ -108,13 +108,12 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
     try {
         if(isEditing && purchase) {
             const purchaseRef = doc(db, 'purchases', purchase.id);
-            const { installments, total, paymentDate, ...rest } = values;
+            const { installments, ...rest } = values;
 
             const purchaseData = {
                 ...rest,
-                total,
-                paymentDate: Timestamp.fromDate(paymentDate),
-                installments: purchase.installments,
+                paymentDate: Timestamp.fromDate(values.paymentDate),
+                installments: purchase.installments, 
             };
             
             await updateDoc(purchaseRef, purchaseData);
@@ -298,7 +297,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={isPaid}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecione o status" />
@@ -317,7 +316,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 <SheetClose asChild>
                     <Button variant="outline">Cancelar</Button>
                 </SheetClose>
-                {!isPaid && <Button type="submit">Salvar</Button>}
+                <Button type="submit">Salvar</Button>
             </SheetFooter>
             </form>
         </Form>
