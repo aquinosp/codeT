@@ -46,10 +46,6 @@ const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
       label: "Aguardando Peças",
       color: "hsl(var(--chart-5))"
     },
-    'Pronta': {
-      label: "Pronta",
-      color: "hsl(var(--chart-3))"
-    }
 };
 
 export type Period = 'today' | 'week' | 'month' | 'year';
@@ -262,7 +258,7 @@ export function DashboardCharts({
                       strokeWidth={2}
                     >
                       {osStatusData.map((entry) => (
-                          <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name]?.color} />
+                          <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} />
                       ))}
                       <LabelList
                           dataKey="count"

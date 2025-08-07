@@ -86,7 +86,7 @@ async function getDashboardData(period: Period) {
 
   // Chart Data
   const osStatusData = serviceOrders
-    .filter(o => o.status !== 'Entregue' && o.status !== 'Cancelada')
+    .filter(o => o.status !== 'Entregue' && o.status !== 'Cancelada' && o.status !== 'Pronta')
     .reduce((acc, o) => {
       const status = o.status;
       const existing = acc.find(item => item.status === status);
