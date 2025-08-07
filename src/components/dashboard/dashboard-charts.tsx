@@ -62,6 +62,7 @@ interface DashboardChartsProps {
     monthlyPurchases: number;
     osStatusData: { status: string; count: number, name: string }[];
     monthlyFinancials: { month: string, revenue: number, purchases: number }[];
+    dailyFinancials: { day: string, revenue: number, purchases: number }[];
     period: Period;
 }
 
@@ -107,6 +108,7 @@ export function DashboardCharts({
     monthlyPurchases,
     osStatusData,
     monthlyFinancials,
+    dailyFinancials,
     period
 }: DashboardChartsProps) {
   return (
@@ -162,6 +164,44 @@ export function DashboardCharts({
             </CardContent>
           </Card>
         </div>
+         {(period === 'week' || period === 'month') && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Histograma Diário</CardTitle>
+                </CardHeader>
+                <CardContent className="pl-2">
+                     <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                        <ResponsiveContainer>
+                            <BarChart data={dailyFinancials}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis
+                                    dataKey="day"
+                                    tickLine={false}
+                                    tickMargin={10}
+                                    axisLine={false}
+                                />
+                                <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value/1000}k`} />
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={<ChartTooltipContent indicator="dot" />}
+                                />
+                                <ChartLegend content={<ChartLegendContent />} />
+                                <Bar
+                                    dataKey="revenue"
+                                    fill="var(--color-revenue)"
+                                    radius={4}
+                                />
+                                <Bar
+                                    dataKey="purchases"
+                                    fill="var(--color-purchases)"
+                                    radius={4}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+        )}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="lg:col-span-4">
             <CardHeader>

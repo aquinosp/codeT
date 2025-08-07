@@ -135,6 +135,49 @@ async function getDashboardData(period: Period) {
       monthlyFinancials.push(p);
     }
   });
+  
+    // Daily Financials
+  const dailyFinancials: { day: string, revenue: number, purchases: number }[] = [];
+  if (period === 'week' || period === 'month') {
+    const revenueByDay = serviceOrders
+      .filter(o => o.status === 'Entregue')
+      .reduce((acc, o) => {
+        const day = o.createdAt.toDate().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const existing = acc.find(item => item.day === day);
+        if (existing) {
+          existing.revenue += o.total;
+        } else {
+          acc.push({ day, revenue: o.total, purchases: 0 });
+        }
+        return acc;
+      }, [] as { day: string, revenue: number, purchases: number }[]);
+
+    const purchasesByDay = purchases
+      .filter(p => p.status === 'Pago')
+      .reduce((acc, p) => {
+        const day = p.paymentDate.toDate().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const existing = acc.find(item => item.day === day);
+        if (existing) {
+          existing.purchases += p.total;
+        } else {
+          acc.push({ day, revenue: 0, purchases: p.total });
+        }
+        return acc;
+      }, [] as { day: string, revenue: number, purchases: number }[]);
+
+    const allDays = new Map<string, { day: string, revenue: number, purchases: number }>();
+    revenueByDay.forEach(r => allDays.set(r.day, { ...r }));
+    purchasesByDay.forEach(p => {
+      const existing = allDays.get(p.day);
+      if (existing) {
+        existing.purchases = p.purchases;
+      } else {
+        allDays.set(p.day, { ...p });
+      }
+    });
+    
+    dailyFinancials.push(...Array.from(allDays.values()).sort((a,b) => a.day.localeCompare(b.day)));
+  }
 
 
   return {
@@ -144,7 +187,8 @@ async function getDashboardData(period: Period) {
     newCustomers,
     monthlyPurchases,
     osStatusData: osStatusData.map(d => ({...d, name: d.status})),
-    monthlyFinancials
+    monthlyFinancials,
+    dailyFinancials
   }
 }
 
