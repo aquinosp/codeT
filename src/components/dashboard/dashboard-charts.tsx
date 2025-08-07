@@ -4,8 +4,9 @@
 
 import type { ComponentProps } from "react"
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList, CartesianGrid, LineChart, Line, Tooltip } from "recharts"
-import { DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
+import { DollarSign, Users, Wrench, ShoppingCart, Scale } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
 
 import {
   Card,
@@ -56,6 +57,7 @@ interface DashboardChartsProps {
     openServiceOrdersValue: number;
     newCustomers: number;
     monthlyPurchases: number;
+    balance: number;
     osStatusData: { status: string; count: number, name: string }[];
     monthlyFinancials: { month: string, revenue: number, purchases: number }[];
     dailyFinancials: { day: string, revenue: number, purchases: number }[];
@@ -102,6 +104,7 @@ export function DashboardCharts({
     openServiceOrdersValue,
     newCustomers,
     monthlyPurchases,
+    balance,
     osStatusData,
     monthlyFinancials,
     dailyFinancials,
@@ -110,7 +113,7 @@ export function DashboardCharts({
   return (
     <>
         <DateFilter currentPeriod={period} />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card className="bg-primary text-primary-foreground">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
@@ -120,6 +123,32 @@ export function DashboardCharts({
               <div className="text-3xl font-bold">{monthlyRevenue.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
               <p className="text-xs text-primary-foreground/80">
                 Total para o período selecionado
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Compras</CardTitle>
+              <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{monthlyPurchases.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
+               <p className="text-xs text-muted-foreground">
+                Total de despesas no período
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Balanço</CardTitle>
+              <Scale className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={cn("text-3xl font-bold", balance >= 0 ? 'text-green-600' : 'text-red-600')}>
+                {balance.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Receitas - Despesas no período
               </p>
             </CardContent>
           </Card>
@@ -144,18 +173,6 @@ export function DashboardCharts({
               <div className="text-3xl font-bold">+{newCustomers}</div>
               <p className="text-xs text-muted-foreground">
                 No período selecionado
-              </p>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Compras</CardTitle>
-              <ShoppingCart className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{monthlyPurchases.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
-               <p className="text-xs text-muted-foreground">
-                Total de despesas no período
               </p>
             </CardContent>
           </Card>

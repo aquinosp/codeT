@@ -83,6 +83,8 @@ async function getDashboardData(period: Period) {
   const monthlyPurchases = purchases
     .filter(p => p.status === 'Pago')
     .reduce((acc, p) => acc + p.total, 0);
+    
+  const balance = monthlyRevenue - monthlyPurchases;
 
   // Chart Data
   const osStatusData = serviceOrders
@@ -186,6 +188,7 @@ async function getDashboardData(period: Period) {
     openServiceOrdersValue,
     newCustomers,
     monthlyPurchases,
+    balance,
     osStatusData: osStatusData.map(d => ({...d, name: d.status})),
     monthlyFinancials,
     dailyFinancials
