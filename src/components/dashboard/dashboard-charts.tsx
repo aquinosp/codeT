@@ -3,7 +3,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList, CartesianGrid } from "recharts"
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList, CartesianGrid, LineChart, Line, Tooltip } from "recharts"
 import { DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 
@@ -160,44 +160,7 @@ export function DashboardCharts({
             </CardContent>
           </Card>
         </div>
-         {(period === 'week' || period === 'month') && (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Histograma Diário</CardTitle>
-                </CardHeader>
-                <CardContent className="pl-2">
-                     <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                        <ResponsiveContainer>
-                            <BarChart data={dailyFinancials}>
-                                <CartesianGrid vertical={false} />
-                                <XAxis
-                                    dataKey="day"
-                                    tickLine={false}
-                                    tickMargin={10}
-                                    axisLine={false}
-                                />
-                                <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value/1000}k`} />
-                                <ChartTooltip
-                                    cursor={false}
-                                    content={<ChartTooltipContent indicator="dot" />}
-                                />
-                                <ChartLegend content={<ChartLegendContent />} />
-                                <Bar
-                                    dataKey="revenue"
-                                    fill="var(--color-revenue)"
-                                    radius={4}
-                                />
-                                <Bar
-                                    dataKey="purchases"
-                                    fill="var(--color-purchases)"
-                                    radius={4}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-        )}
+        
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="lg:col-span-4">
             <CardHeader>
@@ -275,6 +238,61 @@ export function DashboardCharts({
             </CardContent>
           </Card>
         </div>
+
+         {(period === 'week' || period === 'month') && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Histograma Diário</CardTitle>
+                </CardHeader>
+                <CardContent className="pl-2">
+                     <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                        <ResponsiveContainer>
+                            <LineChart data={dailyFinancials}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis
+                                    dataKey="day"
+                                    tickLine={false}
+                                    tickMargin={10}
+                                    axisLine={false}
+                                />
+                                <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value/1000}k`} />
+                                <Tooltip
+                                    cursor={false}
+                                    content={<ChartTooltipContent indicator="dot" />}
+                                />
+                                <ChartLegend content={<ChartLegendContent />} />
+                                <Line
+                                    dataKey="revenue"
+                                    type="monotone"
+                                    stroke="var(--color-revenue)"
+                                    strokeWidth={2}
+                                    dot={{
+                                        fill: "var(--color-revenue)",
+                                    }}
+                                    activeDot={{
+                                        r: 6,
+                                    }}
+                                />
+                                <Line
+                                    dataKey="purchases"
+                                    type="monotone"
+                                    stroke="var(--color-purchases)"
+                                    strokeWidth={2}
+                                    dot={{
+                                        fill: "var(--color-purchases)",
+                                    }}
+                                    activeDot={{
+                                        r: 6,
+                                    }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+        )}
     </>
   )
 }
+
+    
