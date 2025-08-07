@@ -16,10 +16,16 @@ async function getPurchasesData() {
       const supplierDoc = await getDoc(doc(db, "people", p.supplierId));
       if (!supplierDoc.exists()) return null;
 
+      const supplierData = supplierDoc.data() as Person;
+
       return {
           id: p.id,
           ...p,
-          supplier: { id: supplierDoc.id, ...supplierDoc.data() as Person },
+          supplier: { 
+            id: supplierDoc.id, 
+            ...supplierData,
+            createdAt: supplierData.createdAt ? supplierData.createdAt.toDate() : undefined,
+          },
           paymentDate: p.paymentDate.toDate(),
       } as Purchase;
   }));
