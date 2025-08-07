@@ -5,7 +5,7 @@
 import type { ComponentProps } from "react"
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList, CartesianGrid } from "recharts"
 import { DollarSign, Users, Wrench, ShoppingCart } from "lucide-react"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 
 import {
   Card,
