@@ -2,7 +2,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts"
 import { CheckCircle, Clock, DollarSign } from "lucide-react"
 
 import {
@@ -15,19 +15,25 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
 } from "@/components/ui/chart"
 
 const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
-    expense: {
-        label: "Despesa",
+    paid: {
+        label: "Pago",
         color: "hsl(var(--chart-1))",
+    },
+    pending: {
+        label: "Pendente",
+        color: "hsl(var(--chart-2))",
     },
 };
 
 interface PurchasesDashboardProps {
     totalPaid: number;
     totalPending: number;
-    expensesByMonth: { month: string, expense: number }[];
+    expensesByMonth: { month: string, paid: number, pending: number }[];
 }
 
 export function PurchasesDashboard({ 
@@ -84,6 +90,7 @@ export function PurchasesDashboard({
               <ChartContainer config={chartConfig} className="h-[250px] w-full">
                  <ResponsiveContainer>
                     <BarChart data={expensesByMonth}>
+                        <CartesianGrid vertical={false} />
                         <XAxis
                         dataKey="month"
                         tickLine={false}
@@ -95,9 +102,15 @@ export function PurchasesDashboard({
                          cursor={false}
                          content={<ChartTooltipContent indicator="dot" />}
                         />
+                        <ChartLegend content={<ChartLegendContent />} />
                         <Bar
-                          dataKey="expense"
-                          fill="var(--color-expense)"
+                          dataKey="paid"
+                          fill="var(--color-paid)"
+                          radius={4}
+                        />
+                         <Bar
+                          dataKey="pending"
+                          fill="var(--color-pending)"
                           radius={4}
                         />
                     </BarChart>

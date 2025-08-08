@@ -27,17 +27,22 @@ async function getPurchasesDashboardData() {
     .reduce((acc, p) => acc + p.total, 0);
 
   const expensesByMonth = purchasesData
-    .filter(p => p.status === 'Pago')
     .reduce((acc, p) => {
         const month = p.paymentDate.toLocaleString('default', { month: 'short' });
-        const existing = acc.find(item => item.month === month);
-        if(existing) {
-            existing.expense += p.total;
-        } else {
-            acc.push({ month, expense: p.total });
+        let monthData = acc.find(item => item.month === month);
+        if(!monthData) {
+            monthData = { month, paid: 0, pending: 0 };
+            acc.push(monthData);
         }
+        
+        if (p.status === 'Pago') {
+            monthData.paid += p.total;
+        } else if (p.status === 'Previsão') {
+            monthData.pending += p.total;
+        }
+
         return acc;
-    }, [] as { month: string, expense: number }[]);
+    }, [] as { month: string, paid: number, pending: number }[]);
 
 
   return { totalPaid, totalPending, expensesByMonth };
