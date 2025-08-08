@@ -47,7 +47,7 @@ async function getPurchasesDashboardData() {
     }, [] as { month: string, monthYear: string, paid: number, pending: number }[]);
 
   expensesByMonth.sort((a, b) => {
-    return new Date(b.monthYear).getTime() - new Date(a.monthYear).getTime();
+    return new Date(a.monthYear).getTime() - new Date(b.monthYear).getTime();
   });
 
 
