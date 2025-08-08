@@ -28,10 +28,12 @@ async function getPurchasesDashboardData() {
 
   const expensesByMonth = purchasesData
     .reduce((acc, p) => {
-        const month = p.paymentDate.toLocaleString('default', { month: 'short' });
-        let monthData = acc.find(item => item.month === month);
+        const monthYear = `${p.paymentDate.getFullYear()}-${(p.paymentDate.getMonth() + 1).toString().padStart(2, '0')}`;
+        const monthName = p.paymentDate.toLocaleString('pt-BR', { month: 'short' });
+        
+        let monthData = acc.find(item => item.monthYear === monthYear);
         if(!monthData) {
-            monthData = { month, paid: 0, pending: 0 };
+            monthData = { month: monthName, monthYear: monthYear, paid: 0, pending: 0 };
             acc.push(monthData);
         }
         
@@ -42,7 +44,11 @@ async function getPurchasesDashboardData() {
         }
 
         return acc;
-    }, [] as { month: string, paid: number, pending: number }[]);
+    }, [] as { month: string, monthYear: string, paid: number, pending: number }[]);
+
+  expensesByMonth.sort((a, b) => {
+    return new Date(b.monthYear).getTime() - new Date(a.monthYear).getTime();
+  });
 
 
   return { totalPaid, totalPending, expensesByMonth };
