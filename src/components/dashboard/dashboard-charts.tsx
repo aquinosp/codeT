@@ -270,19 +270,36 @@ export function DashboardCharts({
                       nameKey="name"
                       innerRadius={60}
                       strokeWidth={2}
+                      labelLine={false}
+                      label={({
+                          cy,
+                          midAngle,
+                          innerRadius,
+                          outerRadius,
+                          value,
+                          index
+                        }) => {
+                          const RADIAN = Math.PI / 180;
+                          const radius = 25 + innerRadius + (outerRadius - innerRadius);
+                          const x = cy + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                          return (
+                            <text
+                              x={x}
+                              y={y}
+                              className="fill-muted-foreground text-xs"
+                              textAnchor={x > cy ? "start" : "end"}
+                              dominantBaseline="central"
+                            >
+                              {osStatusData[index].name} ({value})
+                            </text>
+                          );
+                      }}
                     >
-                      {osStatusData.map((entry) => (
-                          <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} />
+                      {osStatusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} />
                       ))}
-                      <LabelList
-                          dataKey="count"
-                          position="outside"
-                          offset={12}
-                          className="fill-foreground text-sm font-medium"
-                          formatter={(value: number) => value.toLocaleString()}
-                      />
                     </Pie>
-                    <ChartLegend content={<ChartLegendContent nameKey="name" />} />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
