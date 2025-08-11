@@ -181,6 +181,19 @@ async function getDashboardData(period: Period) {
     dailyFinancials.push(...Array.from(allDays.values()).sort((a,b) => a.day.localeCompare(b.day)));
   }
 
+  const revenueByTechnician = serviceOrders
+    .filter(o => o.status === 'Entregue')
+    .reduce((acc, o) => {
+        const technician = o.technician || 'Não atribuído';
+        const existing = acc.find(item => item.technician === technician);
+        if (existing) {
+            existing.total += o.total;
+        } else {
+            acc.push({ technician, total: o.total });
+        }
+        return acc;
+    }, [] as { technician: string, total: number }[]);
+
 
   return {
     monthlyRevenue,
@@ -191,7 +204,8 @@ async function getDashboardData(period: Period) {
     balance,
     osStatusData: osStatusData.map(d => ({...d, name: d.status})),
     monthlyFinancials,
-    dailyFinancials
+    dailyFinancials,
+    revenueByTechnician,
   }
 }
 

@@ -32,6 +32,10 @@ const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
         label: "Despesas",
         color: "hsl(var(--chart-2))",
     },
+    total: {
+      label: "Total",
+      color: "hsl(var(--chart-1))",
+    },
     count: {
         label: "OS",
     },
@@ -61,6 +65,7 @@ interface DashboardChartsProps {
     osStatusData: { status: string; count: number, name: string }[];
     monthlyFinancials: { month: string, revenue: number, purchases: number }[];
     dailyFinancials: { day: string, revenue: number, purchases: number }[];
+    revenueByTechnician: { technician: string, total: number }[];
     period: Period;
 }
 
@@ -108,6 +113,7 @@ export function DashboardCharts({
     osStatusData,
     monthlyFinancials,
     dailyFinancials,
+    revenueByTechnician,
     period
 }: DashboardChartsProps) {
   return (
@@ -254,6 +260,38 @@ export function DashboardCharts({
               </ChartContainer>
             </CardContent>
           </Card>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="lg:col-span-4">
+                <CardHeader>
+                <CardTitle>Desempenho por Técnico</CardTitle>
+                </CardHeader>
+                <CardContent className="pl-2">
+                <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                    <ResponsiveContainer>
+                        <BarChart data={revenueByTechnician}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                            dataKey="technician"
+                            tickLine={false}
+                            tickMargin={10}
+                            axisLine={false}
+                            />
+                            <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value/1000}k`} />
+                            <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent indicator="dot" />}
+                            />
+                            <Bar
+                            dataKey="total"
+                            fill="var(--color-total)"
+                            radius={4}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </ChartContainer>
+                </CardContent>
+            </Card>
         </div>
 
          {(period === 'week' || period === 'month') && (
