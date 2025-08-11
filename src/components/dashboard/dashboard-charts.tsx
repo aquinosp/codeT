@@ -3,7 +3,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList, CartesianGrid, LineChart, Line, Tooltip } from "recharts"
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList, CartesianGrid, LineChart, Line, Tooltip, Treemap } from "recharts"
 import { DollarSign, Users, Wrench, ShoppingCart, Scale } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -101,6 +101,34 @@ function DateFilter({ currentPeriod }: { currentPeriod: Period }) {
     </div>
   );
 }
+
+const TreemapCustomContent = (props: any) => {
+    const { depth, x, y, width, height, index, name, value } = props;
+    const color = `hsl(${index * 60}, 70%, 50%)`;
+
+    return (
+        <g>
+        <rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            style={{
+            fill: depth === 1 ? color : 'none',
+            stroke: '#fff',
+            strokeWidth: 2 / (depth + 1e-10),
+            strokeOpacity: 1 / (depth + 1e-10),
+            }}
+        />
+        <foreignObject x={x + 4} y={y + 4} width={width - 8} height={height - 8}>
+            <div className="text-white font-medium overflow-hidden text-ellipsis">
+            <p className="text-sm">{name}</p>
+            <p className="text-xs opacity-80">{value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+            </div>
+        </foreignObject>
+        </g>
+    );
+};
 
 
 export function DashboardCharts({ 
@@ -261,39 +289,7 @@ export function DashboardCharts({
             </CardContent>
           </Card>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="lg:col-span-4">
-                <CardHeader>
-                <CardTitle>Desempenho por Técnico</CardTitle>
-                </CardHeader>
-                <CardContent className="pl-2">
-                <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                    <ResponsiveContainer>
-                        <BarChart data={revenueByTechnician}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis
-                            dataKey="technician"
-                            tickLine={false}
-                            tickMargin={10}
-                            axisLine={false}
-                            />
-                            <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value/1000}k`} />
-                            <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent indicator="dot" />}
-                            />
-                            <Bar
-                            dataKey="total"
-                            fill="var(--color-total)"
-                            radius={4}
-                            />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </ChartContainer>
-                </CardContent>
-            </Card>
-        </div>
-
+        
          {(period === 'week' || period === 'month') && (
             <Card>
                 <CardHeader>
@@ -346,6 +342,28 @@ export function DashboardCharts({
                 </CardContent>
             </Card>
         )}
+
+        <div className="grid gap-4 md:grid-cols-1">
+            <Card>
+                <CardHeader>
+                <CardTitle>Desempenho por Técnico</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[350px] w-full">
+                        <ResponsiveContainer>
+                           <Treemap
+                                data={revenueByTechnician.map(item => ({ name: item.technician, value: item.total }))}
+                                dataKey="value"
+                                aspectRatio={4 / 3}
+                                stroke="#fff"
+                                fill="hsl(var(--chart-1))"
+                                content={<TreemapCustomContent />}
+                            />
+                        </ResponsiveContainer>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+        </div>
     </>
   )
 }
