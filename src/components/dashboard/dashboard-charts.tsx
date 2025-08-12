@@ -123,7 +123,7 @@ const TreemapCustomContent = (props: any) => {
         <foreignObject x={x + 4} y={y + 4} width={width - 8} height={height - 8}>
             <div className="text-white font-medium overflow-hidden text-ellipsis">
             <p className="text-sm">{name}</p>
-            <p className="text-xs opacity-80">{value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+            {value && <p className="text-xs opacity-80">{value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>}
             </div>
         </foreignObject>
         </g>
