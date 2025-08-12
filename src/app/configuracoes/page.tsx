@@ -2,9 +2,10 @@
 'use client';
 
 import AppShell from '@/components/app-shell';
+import { withAuth } from '@/components/auth/withAuth';
 import { SettingsForm } from '@/components/configuracoes/settings-form';
 
-export default function ConfiguracoesPage() {
+function ConfiguracoesPage() {
   return (
     <AppShell>
       <div className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col gap-4">
@@ -18,3 +19,5 @@ export default function ConfiguracoesPage() {
     </AppShell>
   );
 }
+
+export default withAuth(ConfiguracoesPage);

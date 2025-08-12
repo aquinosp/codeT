@@ -17,6 +17,10 @@ import { Button } from '@/components/ui/button';
 import { Menu, LogOut, Settings, Bell, Bike } from 'lucide-react';
 import { useAppSettings } from '@/context/app-settings-context';
 import Link from 'next/link';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -26,6 +30,13 @@ interface AppShellProps {
 
 export default function AppShell({ children, sidebarOpen, onSidebarOpenChange }: AppShellProps) {
   const { appName, logoUrl } = useAppSettings();
+  const [user] = useAuthState(auth);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
 
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={onSidebarOpenChange}>
@@ -48,14 +59,14 @@ export default function AppShell({ children, sidebarOpen, onSidebarOpenChange }:
           <SidebarFooter>
             <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center">
               <Avatar className="h-10 w-10">
-                <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="profile picture" />
-                <AvatarFallback>TB</AvatarFallback>
+                <AvatarImage src={user?.photoURL || "https://placehold.co/40x40.png"} data-ai-hint="profile picture" />
+                <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
               <div className="flex-grow group-data-[collapsible=icon]:hidden">
-                <p className="text-sm font-semibold">Técnico Padrão</p>
-                <p className="text-xs text-sidebar-foreground/70">Admin</p>
+                <p className="text-sm font-semibold">{user?.displayName}</p>
+                <p className="text-xs text-sidebar-foreground/70">{user?.email}</p>
               </div>
-              <Button variant="ghost" size="icon" className="shrink-0 group-data-[collapsible=icon]:hidden">
+              <Button variant="ghost" size="icon" className="shrink-0 group-data-[collapsible=icon]:hidden" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>

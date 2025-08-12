@@ -2,9 +2,10 @@
 'use client';
 
 import AppShell from '@/components/app-shell';
+import { withAuth } from '@/components/auth/withAuth';
 import { RegistryTabs } from '@/components/cadastros/registry-tabs';
 
-export default function CadastrosPage() {
+function CadastrosPage() {
   return (
     <AppShell>
       <div className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col gap-4">
@@ -18,3 +19,5 @@ export default function CadastrosPage() {
     </AppShell>
   );
 }
+
+export default withAuth(CadastrosPage);

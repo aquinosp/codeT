@@ -1,10 +1,15 @@
 
+'use client';
+
 import { collection, getDocs, query, Timestamp, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import type { ServiceOrderDocument, Purchase, Person, PurchaseDocument } from "@/lib/types"
 
 import AppShell from "@/components/app-shell"
 import { DashboardCharts, type Period } from "@/components/dashboard/dashboard-charts"
+import { withAuth } from "@/components/auth/withAuth"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation";
 
 function getPeriodDates(period: Period) {
   const now = new Date();
@@ -33,7 +38,6 @@ function getPeriodDates(period: Period) {
 
   return { start, end };
 }
-
 
 async function getDashboardData(period: Period) {
   const { start, end } = getPeriodDates(period);
@@ -209,15 +213,44 @@ async function getDashboardData(period: Period) {
   }
 }
 
-interface DashboardPageProps {
-  searchParams: {
-    period?: Period
-  }
+interface DashboardData {
+  monthlyRevenue: number;
+  openServiceOrders: number;
+  openServiceOrdersValue: number;
+  newCustomers: number;
+  monthlyPurchases: number;
+  balance: number;
+  osStatusData: { status: string; count: number; name: string; }[];
+  monthlyFinancials: { month: string; revenue: number; purchases: number; }[];
+  dailyFinancials: { day: string; revenue: number; purchases: number; }[];
+  revenueByTechnician: { technician: string; total: number; }[];
 }
 
-export default async function DashboardPage({ searchParams }: DashboardPageProps) {
-  const period = searchParams.period || 'month';
-  const data = await getDashboardData(period);
+function DashboardPage() {
+  const searchParams = useSearchParams();
+  const period = (searchParams.get('period') as Period) || 'month';
+  const [data, setData] = useState<DashboardData | null>(null);
+
+  useEffect(() => {
+    getDashboardData(period).then(setData);
+  }, [period]);
+  
+  if (!data) {
+    return (
+        <AppShell>
+            <div className="flex flex-col gap-6 p-4 sm:p-6 md:p-8">
+                <Skeleton className="h-10 w-48" />
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                    {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                    <Skeleton className="lg:col-span-4 h-80 w-full" />
+                    <Skeleton className="lg:col-span-3 h-80 w-full" />
+                </div>
+            </div>
+        </AppShell>
+    );
+  }
   
   return (
     <AppShell>
@@ -232,3 +265,5 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     </AppShell>
   );
 }
+
+export default withAuth(DashboardPage);

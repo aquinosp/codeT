@@ -1,10 +1,19 @@
 
+'use client';
+
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Purchase, PurchaseDocument } from '@/lib/types';
 import AppShell from '@/components/app-shell';
 import { PurchasesDashboard } from '@/components/compras/purchases-dashboard';
+import { withAuth } from '@/components/auth/withAuth';
+import { useEffect, useState } from 'react';
 
+type DashboardData = {
+  totalPaid: number;
+  totalPending: number;
+  expensesByMonth: { month: string, paid: number, pending: number }[];
+};
 
 async function getPurchasesDashboardData() {
   const purchasesQuery = query(collection(db, "purchases"), orderBy("paymentDate", "desc"));
@@ -33,7 +42,7 @@ async function getPurchasesDashboardData() {
         
         let monthData = acc.find(item => item.monthYear === monthYear);
         if(!monthData) {
-            monthData = { month: monthName, monthYear: monthYear, paid: 0, pending: 0 };
+            monthData = { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), monthYear: monthYear, paid: 0, pending: 0 };
             acc.push(monthData);
         }
         
@@ -55,8 +64,16 @@ async function getPurchasesDashboardData() {
 }
 
 
-export default async function ComprasDashboardPage() {
-  const { totalPaid, totalPending, expensesByMonth } = await getPurchasesDashboardData();
+function ComprasDashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+
+  useEffect(() => {
+    getPurchasesDashboardData().then(setData);
+  }, []);
+
+  if (!data) {
+    return <AppShell><div>Carregando...</div></AppShell>;
+  }
 
   return (
     <AppShell>
@@ -67,11 +84,13 @@ export default async function ComprasDashboardPage() {
           </h1>
         </div>
         <PurchasesDashboard 
-          totalPaid={totalPaid} 
-          totalPending={totalPending}
-          expensesByMonth={expensesByMonth}
+          totalPaid={data.totalPaid} 
+          totalPending={data.totalPending}
+          expensesByMonth={data.expensesByMonth}
         />
       </div>
     </AppShell>
   );
 }
+
+export default withAuth(ComprasDashboardPage);

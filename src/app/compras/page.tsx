@@ -1,9 +1,13 @@
 
+'use client';
+
 import { collection, getDocs, query, orderBy, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Purchase, PurchaseDocument, Person } from '@/lib/types';
 import AppShell from '@/components/app-shell';
 import { PurchasesTable } from '@/components/compras/purchases-table';
+import { withAuth } from '@/components/auth/withAuth';
+import { useEffect, useState } from 'react';
 
 
 async function getPurchasesData() {
@@ -36,8 +40,12 @@ async function getPurchasesData() {
 }
 
 
-export default async function ComprasPage() {
-  const { purchases } = await getPurchasesData();
+function ComprasPage() {
+    const [purchases, setPurchases] = useState<Purchase[]>([]);
+    
+    useEffect(() => {
+        getPurchasesData().then(({ purchases }) => setPurchases(purchases));
+    }, []);
 
   return (
     <AppShell>
@@ -54,3 +62,5 @@ export default async function ComprasPage() {
     </AppShell>
   );
 }
+
+export default withAuth(ComprasPage);
