@@ -8,6 +8,7 @@ import AppShell from '@/components/app-shell';
 import { PurchasesDashboard } from '@/components/compras/purchases-dashboard';
 import { withAuth } from '@/components/auth/withAuth';
 import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type DashboardData = {
   totalPaid: number;
@@ -56,8 +57,8 @@ async function getPurchasesDashboardData() {
     }, [] as { month: string, monthYear: string, paid: number, pending: number }[]);
 
   expensesByMonth.sort((a, b) => {
-    return new Date(a.monthYear).getTime() - new Date(b.monthYear).getTime();
-  });
+    return new Date(b.monthYear).getTime() - new Date(a.monthYear).getTime();
+  }).reverse();
 
 
   return { totalPaid, totalPending, expensesByMonth };
@@ -72,7 +73,19 @@ function ComprasDashboardPage() {
   }, []);
 
   if (!data) {
-    return <AppShell><div>Carregando...</div></AppShell>;
+    return (
+        <AppShell>
+             <div className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col gap-4">
+                <Skeleton className="h-10 w-80" />
+                <div className="grid gap-4 md:grid-cols-3">
+                    <Skeleton className="h-28 w-full" />
+                    <Skeleton className="h-28 w-full" />
+                    <Skeleton className="h-28 w-full" />
+                </div>
+                 <Skeleton className="h-80 w-full" />
+             </div>
+        </AppShell>
+    );
   }
 
   return (

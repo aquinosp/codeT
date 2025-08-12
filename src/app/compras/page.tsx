@@ -8,6 +8,7 @@ import AppShell from '@/components/app-shell';
 import { PurchasesTable } from '@/components/compras/purchases-table';
 import { withAuth } from '@/components/auth/withAuth';
 import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 async function getPurchasesData() {
@@ -41,11 +42,29 @@ async function getPurchasesData() {
 
 
 function ComprasPage() {
-    const [purchases, setPurchases] = useState<Purchase[]>([]);
+    const [purchases, setPurchases] = useState<Purchase[] | null>(null);
     
     useEffect(() => {
         getPurchasesData().then(({ purchases }) => setPurchases(purchases));
     }, []);
+
+    if (!purchases) {
+      return (
+        <AppShell>
+          <div className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col gap-4">
+              <Skeleton className="h-10 w-64" />
+              <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                      <Skeleton className="h-9 w-40" />
+                      <Skeleton className="h-9 w-10" />
+                  </div>
+                  <Skeleton className="h-10 w-32" />
+              </div>
+              <Skeleton className="h-[400px] w-full" />
+          </div>
+        </AppShell>
+      )
+    }
 
   return (
     <AppShell>

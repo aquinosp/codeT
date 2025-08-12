@@ -10,6 +10,7 @@ import { DashboardCharts, type Period } from "@/components/dashboard/dashboard-c
 import { withAuth } from "@/components/auth/withAuth"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton"
 
 function getPeriodDates(period: Period) {
   const now = new Date();
@@ -64,7 +65,7 @@ async function getDashboardData(period: Period) {
 
   const [soSnapshot, peopleSnapshot, purchasesSnapshot] = await Promise.all([
     getDocs(soQuery),
-    getDocs(peopleQuery),
+    getDocs(peopleSnapshot),
     getDocs(purchasesQuery),
   ]);
 
@@ -239,7 +240,15 @@ function DashboardPage() {
     return (
         <AppShell>
             <div className="flex flex-col gap-6 p-4 sm:p-6 md:p-8">
-                <Skeleton className="h-10 w-48" />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <Skeleton className="h-10 w-48" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-9 w-16" />
+                    <Skeleton className="h-9 w-20" />
+                    <Skeleton className="h-9 w-16" />
+                    <Skeleton className="h-9 w-16" />
+                  </div>
+                </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                     {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}
                 </div>
