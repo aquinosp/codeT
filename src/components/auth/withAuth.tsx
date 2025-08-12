@@ -43,6 +43,7 @@ export function withAuth<P extends object>(WrappedComponent: ComponentType<P>) {
             setIsAuthorized(false);
           }
         } else {
+          // Should not happen if user is authenticated, but as a fallback
           setIsAuthorized(false);
         }
       };
@@ -61,10 +62,10 @@ export function withAuth<P extends object>(WrappedComponent: ComponentType<P>) {
     
     if (!isAuthorized) {
         return (
-            <div className="flex h-screen flex-col items-center justify-center text-center">
+            <div className="flex h-screen w-screen flex-col items-center justify-center text-center p-4">
                 <h1 className="text-3xl font-bold">Acesso Negado</h1>
-                <p className="text-muted-foreground">
-                    Você não tem permissão para acessar esta aplicação.
+                <p className="text-muted-foreground max-w-md mt-2">
+                    Você não tem permissão para acessar esta aplicação. Por favor, entre em contato com o administrador para solicitar acesso.
                 </p>
             </div>
         );
