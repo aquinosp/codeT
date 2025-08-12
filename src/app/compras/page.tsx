@@ -6,7 +6,6 @@ import { db } from '@/lib/firebase';
 import type { Purchase, PurchaseDocument, Person } from '@/lib/types';
 import AppShell from '@/components/app-shell';
 import { PurchasesTable } from '@/components/compras/purchases-table';
-import { withAuth } from '@/components/auth/withAuth';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -82,4 +81,4 @@ function ComprasPage() {
   );
 }
 
-export default withAuth(ComprasPage);
+export default ComprasPage;

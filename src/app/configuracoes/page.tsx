@@ -2,7 +2,6 @@
 'use client';
 
 import AppShell from '@/components/app-shell';
-import { withAuth } from '@/components/auth/withAuth';
 import { SettingsForm } from '@/components/configuracoes/settings-form';
 
 function ConfiguracoesPage() {
@@ -20,4 +19,4 @@ function ConfiguracoesPage() {
   );
 }
 
-export default withAuth(ConfiguracoesPage);
+export default ConfiguracoesPage;

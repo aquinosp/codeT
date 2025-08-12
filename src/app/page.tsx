@@ -7,7 +7,6 @@ import type { ServiceOrderDocument, Purchase, Person, PurchaseDocument } from "@
 
 import AppShell from "@/components/app-shell"
 import { DashboardCharts, type Period } from "@/components/dashboard/dashboard-charts"
-import { withAuth } from "@/components/auth/withAuth"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton"
@@ -275,4 +274,4 @@ function DashboardPage() {
   );
 }
 
-export default withAuth(DashboardPage);
+export default DashboardPage;

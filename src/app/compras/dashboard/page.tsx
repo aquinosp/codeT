@@ -6,7 +6,6 @@ import { db } from '@/lib/firebase';
 import type { Purchase, PurchaseDocument } from '@/lib/types';
 import AppShell from '@/components/app-shell';
 import { PurchasesDashboard } from '@/components/compras/purchases-dashboard';
-import { withAuth } from '@/components/auth/withAuth';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -57,8 +56,8 @@ async function getPurchasesDashboardData() {
     }, [] as { month: string, monthYear: string, paid: number, pending: number }[]);
 
   expensesByMonth.sort((a, b) => {
-    return new Date(b.monthYear).getTime() - new Date(a.monthYear).getTime();
-  }).reverse();
+    return new Date(a.monthYear).getTime() - new Date(b.monthYear).getTime();
+  });
 
 
   return { totalPaid, totalPending, expensesByMonth };
@@ -106,4 +105,4 @@ function ComprasDashboardPage() {
   );
 }
 
-export default withAuth(ComprasDashboardPage);
+export default ComprasDashboardPage;

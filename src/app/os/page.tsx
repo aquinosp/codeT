@@ -11,7 +11,6 @@ import { PaymentDialog } from '@/components/os/payment-dialog';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { DateRange } from 'react-day-picker';
-import { withAuth } from '@/components/auth/withAuth';
 
 function OsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -73,4 +72,4 @@ function OsPage() {
   );
 }
 
-export default withAuth(OsPage);
+export default OsPage;

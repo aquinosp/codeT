@@ -2,7 +2,6 @@
 'use client';
 
 import AppShell from '@/components/app-shell';
-import { withAuth } from '@/components/auth/withAuth';
 import { RegistryTabs } from '@/components/cadastros/registry-tabs';
 
 function CadastrosPage() {
@@ -20,4 +19,4 @@ function CadastrosPage() {
   );
 }
 
-export default withAuth(CadastrosPage);
+export default CadastrosPage;
