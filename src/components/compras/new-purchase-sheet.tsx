@@ -124,7 +124,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
         } else {
             const batch = writeBatch(db);
-            const { installments, total, paymentDate, ...rest } = values;
+            const { installments, total, paymentDate, status, ...rest } = values;
             
             const installmentValue = total / installments;
 
@@ -137,7 +137,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                     total: installmentValue,
                     paymentDate: Timestamp.fromDate(currentPaymentDate),
                     installments: `${i + 1}/${installments}`,
-                    status: 'Previsão' as const,
+                    status: (i === 0) ? status : 'Previsão' as const,
                 };
                 batch.set(docRef, purchaseData);
             }
