@@ -1,7 +1,7 @@
 
 'use client';
 
-import { collection, getDocs, query, orderBy, getDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Purchase, PurchaseDocument, Person } from '@/lib/types';
 import AppShell from '@/components/app-shell';
@@ -9,67 +9,75 @@ import { PurchasesTable } from '@/components/compras/purchases-table';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-
-async function getPurchasesData() {
-  const purchasesQuery = query(collection(db, "purchases"), orderBy("paymentDate", "asc"));
-  const purchasesSnapshot = await getDocs(purchasesQuery);
-  const purchaseList = purchasesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as PurchaseDocument));
-
-  const purchasesData = await Promise.all(purchaseList.map(async (p) => {
-      if (!p.supplierId) return null;
-      const supplierDoc = await getDoc(doc(db, "people", p.supplierId));
-      if (!supplierDoc.exists()) return null;
-
-      const supplierData = supplierDoc.data() as Person;
-
-      return {
-          id: p.id,
-          ...p,
-          supplier: { 
-            id: supplierDoc.id, 
-            ...supplierData,
-            createdAt: supplierData.createdAt ? supplierData.createdAt.toDate() : undefined,
-          },
-          paymentDate: p.paymentDate.toDate(),
-      } as Purchase;
-  }));
-  
-  const purchases = (purchasesData.filter(Boolean) as Purchase[]).sort((a, b) => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
-    const aDate = new Date(a.paymentDate);
-    aDate.setHours(0, 0, 0, 0);
-    const bDate = new Date(b.paymentDate);
-    bDate.setHours(0, 0, 0, 0);
-
-    const aIsPaid = a.status === 'Pago';
-    const bIsPaid = b.status === 'Pago';
-    if (aIsPaid && !bIsPaid) return 1;
-    if (!aIsPaid && bIsPaid) return -1;
-    
-    const aIsOverdue = !aIsPaid && aDate < now;
-    const bIsOverdue = !bIsPaid && bDate < now;
-    if (aIsOverdue && !bIsOverdue) return -1;
-    if (!aIsOverdue && bIsOverdue) return 1;
-
-    const aIsToday = aDate.getTime() === now.getTime();
-    const bIsToday = bDate.getTime() === now.getTime();
-    if (aIsToday && !bIsToday) return -1;
-    if (!aIsToday && bIsToday) return 1;
-
-    return aDate.getTime() - bDate.getTime();
-  });
-
-  return { purchases };
-}
-
-
 function ComprasPage() {
     const [purchases, setPurchases] = useState<Purchase[] | null>(null);
     
     useEffect(() => {
-        getPurchasesData().then(({ purchases }) => setPurchases(purchases));
+        async function getPurchasesData() {
+            const purchasesQuery = query(collection(db, "purchases"));
+            const purchasesSnapshot = await getDocs(purchasesQuery);
+            const purchaseList = purchasesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as PurchaseDocument));
+
+            const purchasesData = await Promise.all(purchaseList.map(async (p) => {
+                if (!p.supplierId) return null;
+                const supplierDoc = await getDoc(doc(db, "people", p.supplierId));
+                if (!supplierDoc.exists()) return null;
+
+                const supplierData = supplierDoc.data() as Person;
+
+                return {
+                    id: p.id,
+                    ...p,
+                    supplier: { 
+                        id: supplierDoc.id, 
+                        ...supplierData,
+                        createdAt: supplierData.createdAt ? supplierData.createdAt.toDate() : undefined,
+                    },
+                    paymentDate: p.paymentDate.toDate(),
+                } as Purchase;
+            }));
+            
+            const sortedPurchases = (purchasesData.filter(Boolean) as Purchase[]).sort((a, b) => {
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+
+                const aDate = new Date(a.paymentDate);
+                aDate.setHours(0, 0, 0, 0);
+                const bDate = new Date(b.paymentDate);
+                bDate.setHours(0, 0, 0, 0);
+
+                const aIsPaid = a.status === 'Pago';
+                const bIsPaid = b.status === 'Pago';
+
+                const aIsOverdue = !aIsPaid && aDate < now;
+                const bIsOverdue = !bIsPaid && bDate < now;
+                
+                const aIsToday = !aIsPaid && aDate.getTime() === now.getTime();
+                const bIsToday = !bIsPaid && bDate.getTime() === now.getTime();
+                
+                const aIsFuture = !aIsPaid && aDate > now;
+                const bIsFuture = !bIsPaid && bDate > now;
+
+                if (aIsPaid && !bIsPaid) return 1;
+                if (!aIsPaid && bIsPaid) return -1;
+                
+                if (aIsOverdue && !bIsOverdue) return -1;
+                if (!aIsOverdue && bIsOverdue) return 1;
+                
+                if (aIsToday && !bIsToday) return -1;
+                if (!aIsToday && bIsToday) return 1;
+                
+                if (aIsFuture && !bIsFuture) return aDate.getTime() - bDate.getTime();
+                
+                if (aIsOverdue && bIsOverdue) return aDate.getTime() - bDate.getTime();
+                
+                return bDate.getTime() - aDate.getTime();
+            });
+
+            setPurchases(sortedPurchases);
+        }
+        
+        getPurchasesData();
     }, []);
 
     if (!purchases) {
