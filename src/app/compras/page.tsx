@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 
 async function getPurchasesData() {
-  const purchasesQuery = query(collection(db, "purchases"), orderBy("paymentDate", "desc"));
+  const purchasesQuery = query(collection(db, "purchases"), orderBy("paymentDate", "asc"));
   const purchasesSnapshot = await getDocs(purchasesQuery);
   const purchaseList = purchasesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as PurchaseDocument));
 
@@ -34,7 +34,32 @@ async function getPurchasesData() {
       } as Purchase;
   }));
   
-  const purchases = purchasesData.filter(Boolean) as Purchase[];
+  const purchases = (purchasesData.filter(Boolean) as Purchase[]).sort((a, b) => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const aDate = new Date(a.paymentDate);
+    aDate.setHours(0, 0, 0, 0);
+    const bDate = new Date(b.paymentDate);
+    bDate.setHours(0, 0, 0, 0);
+
+    const aIsPaid = a.status === 'Pago';
+    const bIsPaid = b.status === 'Pago';
+    if (aIsPaid && !bIsPaid) return 1;
+    if (!aIsPaid && bIsPaid) return -1;
+    
+    const aIsOverdue = !aIsPaid && aDate < now;
+    const bIsOverdue = !bIsPaid && bDate < now;
+    if (aIsOverdue && !bIsOverdue) return -1;
+    if (!aIsOverdue && bIsOverdue) return 1;
+
+    const aIsToday = aDate.getTime() === now.getTime();
+    const bIsToday = bDate.getTime() === now.getTime();
+    if (aIsToday && !bIsToday) return -1;
+    if (!aIsToday && bIsToday) return 1;
+
+    return aDate.getTime() - bDate.getTime();
+  });
 
   return { purchases };
 }
