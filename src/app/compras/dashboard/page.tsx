@@ -69,23 +69,31 @@ function ComprasDashboardPage() {
           } as Purchase;
       });
 
-      const filteredPurchases = allPurchases.filter(p => {
+      const paidInPeriod = allPurchases.filter(p => {
         const paymentDate = new Date(p.paymentDate);
         const isInPeriod = paymentDate >= start && paymentDate <= end;
-        
-        // Include if it's paid in the period OR if it's pending in the period.
-        return (p.status === 'Pago' && isInPeriod) || (p.status === 'Previsão' && isInPeriod);
+        return p.status === 'Pago' && isInPeriod;
       });
 
-      const totalPaid = filteredPurchases
-        .filter(p => p.status === 'Pago')
-        .reduce((acc, p) => acc + p.total, 0);
+      const pendingInPeriod = allPurchases.filter(p => {
+        const paymentDate = new Date(p.paymentDate);
+        const isInPeriod = paymentDate >= start && paymentDate <= end;
+        return p.status === 'Previsão' && isInPeriod;
+      });
+      
+      const allPending = allPurchases.filter(p => p.status === 'Previsão');
 
-      const totalPending = filteredPurchases
-        .filter(p => p.status === 'Previsão')
-        .reduce((acc, p) => acc + p.total, 0);
+      const totalPaid = paidInPeriod.reduce((acc, p) => acc + p.total, 0);
 
-      const expensesByMonth = filteredPurchases
+      const totalPending = pendingInPeriod.reduce((acc, p) => acc + p.total, 0);
+      
+      const allPeriodPurchases = allPurchases.filter(p => {
+        const paymentDate = new Date(p.paymentDate);
+        return paymentDate >= start && paymentDate <= end;
+      });
+
+
+      const expensesByMonth = allPeriodPurchases
         .reduce((acc, p) => {
             const monthYear = `${p.paymentDate.getFullYear()}-${(p.paymentDate.getMonth() + 1).toString().padStart(2, '0')}`;
             const monthName = p.paymentDate.toLocaleString('pt-BR', { month: 'short' });
@@ -109,7 +117,7 @@ function ComprasDashboardPage() {
         return new Date(a.monthYear).getTime() - new Date(b.monthYear).getTime();
       });
       
-      const expensesByWeek = filteredPurchases
+      const expensesByWeek = allPeriodPurchases
         .reduce((acc, p) => {
             const weekStart = startOfWeek(p.paymentDate, { locale: ptBR });
             const weekLabel = format(weekStart, "dd/MM", { locale: ptBR });
