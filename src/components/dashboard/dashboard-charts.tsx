@@ -3,7 +3,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, LabelList, CartesianGrid, LineChart, Line, Tooltip, Treemap } from "recharts"
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Cell, CartesianGrid, LineChart, Line, Tooltip, Treemap, Label } from "recharts"
 import { DollarSign, Users, Wrench, ShoppingCart, Scale } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -272,17 +272,70 @@ export function DashboardCharts({
                       innerRadius={60}
                       strokeWidth={5}
                       labelLine={false}
+                      label={({
+                        cx,
+                        cy,
+                        midAngle,
+                        innerRadius,
+                        outerRadius,
+                        value,
+                        index,
+                      }) => {
+                        const RADIAN = Math.PI / 180
+                        const radius =
+                          innerRadius + (outerRadius - innerRadius) * 0.5
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+                        return (
+                          <text
+                            x={x}
+                            y={y}
+                            fill="hsl(var(--primary-foreground))"
+                            textAnchor={x > cx ? 'start' : 'end'}
+                            dominantBaseline="central"
+                            className="text-sm font-bold"
+                          >
+                            {value}
+                          </text>
+                        )
+                      }}
                     >
-                      <LabelList
-                        dataKey="count"
-                        className="fill-background text-lg font-bold"
-                        position="inside"
+                       <Label
+                        content={({ viewBox }) => {
+                          if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                            return (
+                              <text
+                                x={viewBox.cx}
+                                y={viewBox.cy}
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                                className="fill-foreground text-center"
+                              >
+                                <tspan
+                                  x={viewBox.cx}
+                                  y={viewBox.cy}
+                                  className="text-3xl font-bold"
+                                >
+                                  {totalOs.toLocaleString()}
+                                </tspan>
+                                <tspan
+                                  x={viewBox.cx}
+                                  y={(viewBox.cy || 0) + 24}
+                                  className="text-sm text-muted-foreground"
+                                >
+                                  OS Abertas
+                                </tspan>
+                              </text>
+                            )
+                          }
+                        }}
                       />
                       {osStatusData.map((entry) => (
                           <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} className="stroke-background outline-none ring-0 focus-visible:ring-0" />
                       ))}
                     </Pie>
-                    <ChartLegend content={<ChartLegendContent nameKey="name" />} className="flex-wrap" />
+                    <ChartLegend content={<ChartLegendContent nameKey="name" />} />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
