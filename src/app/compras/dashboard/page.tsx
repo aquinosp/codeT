@@ -1,7 +1,7 @@
 
 'use client';
 
-import { collection, getDocs, query, orderBy, where, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Purchase, PurchaseDocument } from '@/lib/types';
 import AppShell from '@/components/app-shell';
@@ -58,34 +58,31 @@ function ComprasDashboardPage() {
     async function getPurchasesDashboardData(period: Period) {
       const { start, end } = getPeriodDates(period);
 
-      const startTimestamp = Timestamp.fromDate(start);
-      const endTimestamp = Timestamp.fromDate(end);
-
-      const purchasesQuery = query(
-        collection(db, "purchases"), 
-        where("paymentDate", ">=", startTimestamp),
-        where("paymentDate", "<=", endTimestamp),
-        orderBy("paymentDate", "desc")
-      );
+      const purchasesQuery = query(collection(db, "purchases"), orderBy("paymentDate", "desc"));
       const purchasesSnapshot = await getDocs(purchasesQuery);
       const purchaseList = purchasesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as PurchaseDocument));
 
-      const purchasesData = purchaseList.map(p => {
+      const allPurchases = purchaseList.map(p => {
           return {
               ...p,
               paymentDate: p.paymentDate.toDate(),
           } as Purchase;
       });
 
-      const totalPaid = purchasesData
+      const filteredPurchases = allPurchases.filter(p => {
+        const paymentDate = new Date(p.paymentDate);
+        return paymentDate >= start && paymentDate <= end;
+      });
+
+      const totalPaid = filteredPurchases
         .filter(p => p.status === 'Pago')
         .reduce((acc, p) => acc + p.total, 0);
 
-      const totalPending = purchasesData
+      const totalPending = filteredPurchases
         .filter(p => p.status === 'Previsão')
         .reduce((acc, p) => acc + p.total, 0);
 
-      const expensesByMonth = purchasesData
+      const expensesByMonth = filteredPurchases
         .reduce((acc, p) => {
             const monthYear = `${p.paymentDate.getFullYear()}-${(p.paymentDate.getMonth() + 1).toString().padStart(2, '0')}`;
             const monthName = p.paymentDate.toLocaleString('pt-BR', { month: 'short' });
@@ -109,7 +106,7 @@ function ComprasDashboardPage() {
         return new Date(a.monthYear).getTime() - new Date(b.monthYear).getTime();
       });
       
-      const expensesByWeek = purchasesData
+      const expensesByWeek = filteredPurchases
         .reduce((acc, p) => {
             const weekStart = startOfWeek(p.paymentDate, { locale: ptBR });
             const weekLabel = format(weekStart, "dd/MM", { locale: ptBR });
