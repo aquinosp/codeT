@@ -71,7 +71,10 @@ function ComprasDashboardPage() {
 
       const filteredPurchases = allPurchases.filter(p => {
         const paymentDate = new Date(p.paymentDate);
-        return paymentDate >= start && paymentDate <= end;
+        const isInPeriod = paymentDate >= start && paymentDate <= end;
+        
+        // Include if it's paid in the period OR if it's pending in the period.
+        return (p.status === 'Pago' && isInPeriod) || (p.status === 'Previsão' && isInPeriod);
       });
 
       const totalPaid = filteredPurchases
