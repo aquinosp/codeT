@@ -253,7 +253,7 @@ export function DashboardCharts({
             <CardHeader>
               <CardTitle>Status das Ordens de Serviço</CardTitle>
             </CardHeader>
-            <CardContent className="flex justify-center items-center">
+            <CardContent className="flex flex-col justify-center items-center">
               <ChartContainer
                 config={chartConfig}
                 className="mx-auto aspect-square h-[250px]"
@@ -277,7 +277,6 @@ export function DashboardCharts({
                           innerRadius,
                           outerRadius,
                           value,
-                          index
                         }) => {
                           const RADIAN = Math.PI / 180;
                           const radius = 25 + innerRadius + (outerRadius - innerRadius);
@@ -287,22 +286,23 @@ export function DashboardCharts({
                             <text
                               x={x}
                               y={y}
-                              className="fill-muted-foreground text-xs"
+                              className="fill-muted-foreground text-sm font-bold"
                               textAnchor={x > cy ? "start" : "end"}
                               dominantBaseline="central"
                             >
-                              {osStatusData[index].name} ({value})
+                              {value}
                             </text>
                           );
                       }}
                     >
-                      {osStatusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} />
+                      {osStatusData.map((entry) => (
+                          <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} />
                       ))}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
+              <ChartLegend content={<ChartLegendContent nameKey="name" />} className="flex-wrap" />
             </CardContent>
           </Card>
         </div>
