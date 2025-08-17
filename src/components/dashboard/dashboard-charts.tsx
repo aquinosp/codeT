@@ -299,10 +299,10 @@ export function DashboardCharts({
                           <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} />
                       ))}
                     </Pie>
+                    <ChartLegend content={<ChartLegendContent nameKey="name" />} className="flex-wrap" />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
-              <ChartLegend content={<ChartLegendContent nameKey="name" />} className="flex-wrap" />
             </CardContent>
           </Card>
         </div>
@@ -384,5 +384,3 @@ export function DashboardCharts({
     </>
   )
 }
-
-    
