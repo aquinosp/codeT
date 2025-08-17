@@ -105,6 +105,7 @@ function DateFilter({ currentPeriod }: { currentPeriod: Period }) {
 const TreemapCustomContent = (props: any) => {
     const { depth, x, y, width, height, index, name, value } = props;
     const color = `hsl(${index * 60}, 70%, 50%)`;
+    const commission = value * 0.05;
 
     return (
         <g>
@@ -124,6 +125,7 @@ const TreemapCustomContent = (props: any) => {
             <div className="text-white font-medium overflow-hidden text-ellipsis">
             <p className="text-sm">{name}</p>
             {value && <p className="text-xs opacity-80">{value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>}
+             {value && <p className="text-xs opacity-80">5% = {commission.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>}
             </div>
         </foreignObject>
         </g>
@@ -335,7 +337,7 @@ export function DashboardCharts({
                           <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} className="stroke-background outline-none ring-0 focus-visible:ring-0" />
                       ))}
                     </Pie>
-                    <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+                    <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-nowrap" />} />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
