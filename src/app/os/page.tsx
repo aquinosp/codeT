@@ -6,7 +6,7 @@ import AppShell from '@/components/app-shell';
 import OsTabs from '@/components/os/os-tabs';
 import { OsReceipt } from '@/components/os/os-receipt';
 import type { ServiceOrder } from '@/lib/types';
-import { useServiceOrders, type DateRangeFilter } from '@/hooks/useServiceOrders';
+import { useServiceOrders } from '@/hooks/useServiceOrders';
 import { PaymentDialog } from '@/components/os/payment-dialog';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';

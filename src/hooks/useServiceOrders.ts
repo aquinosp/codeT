@@ -1,9 +1,8 @@
 
-
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, getDoc, query, orderBy, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { ServiceOrder, ServiceOrderDocument } from "@/lib/types";
+import type { ServiceOrder, ServiceOrderDocument, Person, Product } from "@/lib/types";
 import type { DateRange } from 'react-day-picker';
 
 export type DateRangeFilter = DateRange | undefined;
@@ -28,11 +27,11 @@ export function useServiceOrders(filter?: DateRangeFilter) {
             const ordersDataPromises = snapshot.docs.map(async (d) => {
                 const orderData = d.data() as ServiceOrderDocument;
 
-                let customer;
+                let customer: Person | undefined;
                 if (orderData.customerId) {
                   const customerDoc = await getDoc(doc(db, "people", orderData.customerId));
                   if (customerDoc.exists()) {
-                     customer = { id: customerDoc.id, ...customerDoc.data() };
+                     customer = { id: customerDoc.id, ...(customerDoc.data() as Omit<Person, 'id'>) };
                   }
                 }
 
@@ -42,10 +41,13 @@ export function useServiceOrders(filter?: DateRangeFilter) {
                     if (!item.productId) return null;
                     const productDoc = await getDoc(doc(db, "products", item.productId));
                     if (!productDoc.exists()) return null;
+                    const productData = { id: productDoc.id, ...(productDoc.data() as Omit<Product, 'id'>) };
                     return {
                         id: productDoc.id,
-                        product: { id: productDoc.id, ...productDoc.data() },
-                        ...item
+                        product: productData,
+                        quantity: item.quantity,
+                        unitPrice: item.unitPrice,
+                        total: item.total,
                     };
                 });
                 const items = (await Promise.all(itemsPromises)).filter(Boolean) as ServiceOrder['items'];

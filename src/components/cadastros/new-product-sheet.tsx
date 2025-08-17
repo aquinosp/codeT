@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -5,7 +6,7 @@ import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Plus } from "lucide-react"
-import { addDoc, collection } from "firebase/firestore"
+import { addDoc, collection, doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 import {
@@ -25,12 +26,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group"
+import type { Product } from "@/lib/types"
+import { useEffect } from "react"
 
-const productGroups = ['ACESSÓRIO', 'PARTES', 'PEÇAS', 'PNEUMÁTICOS', 'RELAÇÃO', 'SERVIÇO'] as const;
 
 const productSchema = z.object({
   code: z.string().optional(),
-  name: z.string().optional(),
+  name: z.string().min(1, "Nome é obrigatório"),
   description: z.string().optional(),
   barcode: z.string().optional(),
   type: z.enum(["Produto", "Serviço"]),
@@ -42,8 +44,14 @@ const productSchema = z.object({
   unit: z.enum(["un", "kg", "L", "m"]).optional(),
 });
 
+interface NewProductSheetProps {
+  isEditing?: boolean;
+  product?: Product;
+  trigger?: React.ReactNode;
+}
 
-export function NewProductSheet() {
+
+export function NewProductSheet({ isEditing = false, product, trigger }: NewProductSheetProps) {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false);
 
@@ -51,8 +59,8 @@ export function NewProductSheet() {
     resolver: zodResolver(productSchema),
     defaultValues: {
       type: "Produto",
-      code: "",
       name: "",
+      code: "",
       description: "",
       barcode: "",
       group: "",
@@ -64,6 +72,26 @@ export function NewProductSheet() {
     },
   })
   
+  useEffect(() => {
+    if (isEditing && product) {
+        form.reset(product);
+    } else {
+        form.reset({
+            type: "Produto",
+            name: "",
+            code: "",
+            description: "",
+            barcode: "",
+            group: "",
+            costPrice: undefined,
+            sellPrice: undefined,
+            stock: undefined,
+            minStock: undefined,
+            unit: "un",
+        });
+    }
+  }, [isOpen, isEditing, product, form]);
+  
   const productType = useWatch({
     control: form.control,
     name: 'type',
@@ -72,27 +100,34 @@ export function NewProductSheet() {
 
   async function onSubmit(values: z.infer<typeof productSchema>) {
     try {
-      await addDoc(collection(db, "products"), values);
-      toast({ title: "Item Salvo", description: `O item ${values.name} foi salvo com sucesso.` })
+      if(isEditing && product) {
+        const productRef = doc(db, "products", product.id);
+        await updateDoc(productRef, values);
+        toast({ title: "Item Atualizado", description: `O item ${values.name} foi atualizado com sucesso.` })
+      } else {
+        await addDoc(collection(db, "products"), values);
+        toast({ title: "Item Salvo", description: `O item ${values.name} foi salvo com sucesso.` })
+      }
       form.reset()
       setIsOpen(false)
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error saving document: ", error);
       toast({ title: "Erro", description: "Ocorreu um erro ao salvar o item.", variant: "destructive" });
     }
   }
 
+  const title = isEditing ? "Editar Produto/Serviço" : "Novo Produto ou Serviço";
+  const description = isEditing ? "Atualize os dados do item selecionado." : "Adicione um novo produto ou serviço ao seu inventário.";
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button onClick={() => setIsOpen(true)}><Plus className="-ml-1 h-4 w-4" /> Novo Produto/Serviço</Button>
+      <SheetTrigger asChild onClick={() => setIsOpen(true)}>
+        {trigger || <Button><Plus className="-ml-1 h-4 w-4" /> Novo Produto/Serviço</Button>}
       </SheetTrigger>
       <SheetContent className="sm:max-w-2xl w-full flex flex-col">
         <SheetHeader>
-          <SheetTitle className="font-headline">Novo Produto ou Serviço</SheetTitle>
-          <SheetDescription>
-            Adicione um novo produto ou serviço ao seu inventário.
-          </SheetDescription>
+          <SheetTitle className="font-headline">{title}</SheetTitle>
+          <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col gap-4 overflow-y-auto pr-6">
@@ -165,9 +200,12 @@ export function NewProductSheet() {
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                {productGroups.map(group => (
-                                    <SelectItem key={group} value={group}>{group}</SelectItem>
-                                ))}
+                                <SelectItem value="ACESSÓRIO">ACESSÓRIO</SelectItem>
+                                <SelectItem value="PARTES">PARTES</SelectItem>
+                                <SelectItem value="PEÇAS">PEÇAS</SelectItem>
+                                <SelectItem value="PNEUMÁTICOS">PNEUMÁTICOS</SelectItem>
+                                <SelectItem value="RELAÇÃO">RELAÇÃO</SelectItem>
+                                <SelectItem value="SERVIÇO">SERVIÇO</SelectItem>
                             </SelectContent>
                         </Select>
                         <FormMessage />

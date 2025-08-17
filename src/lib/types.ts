@@ -1,3 +1,4 @@
+
 import type { Timestamp } from "firebase/firestore";
 
 export type Person = {
@@ -7,19 +8,19 @@ export type Person = {
   email: string;
   cpfCnpj: string;
   type: 'Cliente' | 'Fornecedor' | 'Funcionário';
-  createdAt?: Timestamp;
+  createdAt?: Date;
 };
 
 export type Product = {
   id: string;
-  code: string;
+  code?: string;
   name:string;
-  description: string;
+  description?: string;
   barcode?: string;
   type: 'Produto' | 'Serviço';
-  group: 'ACESSÓRIO' | 'PARTES' | 'PEÇAS' | 'PNEUMÁTICOS' | 'RELAÇÃO' | 'SERVIÇO' | string;
-  costPrice: number;
-  sellPrice: number;
+  group?: string;
+  costPrice?: number;
+  sellPrice?: number;
   stock?: number;
   minStock?: number;
   unit?: 'un' | 'kg' | 'L' | 'm';

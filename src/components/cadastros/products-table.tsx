@@ -17,6 +17,10 @@ import { collection, onSnapshot, query, orderBy } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { BulkImportSheet } from "./bulk-import-sheet"
 import { Badge } from "../ui/badge"
+import { MoreHorizontal } from "lucide-react"
+import { Button } from "../ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu"
+
 
 interface ProductsTableProps {
   searchTerm: string;
@@ -54,7 +58,7 @@ export function ProductsTable({ searchTerm }: ProductsTableProps) {
             <BulkImportSheet
               collectionName="products"
               fields={['code', 'name', 'description', 'barcode', 'group', 'type', 'costPrice', 'sellPrice', 'stock', 'minStock', 'unit']}
-              requiredFields={[]}
+              requiredFields={['name', 'type']}
               numericFields={['costPrice', 'sellPrice', 'stock', 'minStock']}
               enumFields={{ 
                   'unit': ['un', 'kg', 'L', 'm'],
@@ -74,6 +78,7 @@ export function ProductsTable({ searchTerm }: ProductsTableProps) {
               <TableHead>Tipo</TableHead>
               <TableHead>Preço Venda</TableHead>
               <TableHead>Estoque</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -97,6 +102,20 @@ export function ProductsTable({ searchTerm }: ProductsTableProps) {
                     ) : (
                         <span className="text-muted-foreground">-</span>
                     )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                      <NewProductSheet isEditing product={product} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
