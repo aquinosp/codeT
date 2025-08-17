@@ -8,11 +8,14 @@ import AppShell from '@/components/app-shell';
 import { PurchasesDashboard } from '@/components/compras/purchases-dashboard';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { startOfWeek, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 type DashboardData = {
   totalPaid: number;
   totalPending: number;
   expensesByMonth: { month: string, paid: number, pending: number }[];
+  expensesByWeek: { week: string, paid: number, pending: number }[];
 };
 
 function ComprasDashboardPage() {
@@ -62,9 +65,32 @@ function ComprasDashboardPage() {
       expensesByMonth.sort((a, b) => {
         return new Date(a.monthYear).getTime() - new Date(b.monthYear).getTime();
       });
+      
+      const expensesByWeek = purchasesData
+        .reduce((acc, p) => {
+            const weekStart = startOfWeek(p.paymentDate, { locale: ptBR });
+            const weekLabel = format(weekStart, "dd/MM", { locale: ptBR });
+            
+            let weekData = acc.find(item => item.week === weekLabel);
+            if(!weekData) {
+                weekData = { week: weekLabel, weekStart, paid: 0, pending: 0 };
+                acc.push(weekData);
+            }
+            
+            if (p.status === 'Pago') {
+                weekData.paid += p.total;
+            } else if (p.status === 'Previsão') {
+                weekData.pending += p.total;
+            }
 
+            return acc;
+        }, [] as { week: string, weekStart: Date, paid: number, pending: number }[]);
+        
+       expensesByWeek.sort((a, b) => {
+        return a.weekStart.getTime() - b.weekStart.getTime();
+      });
 
-      setData({ totalPaid, totalPending, expensesByMonth });
+      setData({ totalPaid, totalPending, expensesByMonth, expensesByWeek });
     }
 
     getPurchasesDashboardData();
@@ -81,6 +107,7 @@ function ComprasDashboardPage() {
                     <Skeleton className="h-28 w-full" />
                 </div>
                  <Skeleton className="h-80 w-full" />
+                 <Skeleton className="h-80 w-full mt-4" />
              </div>
         </AppShell>
     );
@@ -98,6 +125,7 @@ function ComprasDashboardPage() {
           totalPaid={data.totalPaid} 
           totalPending={data.totalPending}
           expensesByMonth={data.expensesByMonth}
+          expensesByWeek={data.expensesByWeek}
         />
       </div>
     </AppShell>

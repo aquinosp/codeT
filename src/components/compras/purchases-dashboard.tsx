@@ -34,12 +34,14 @@ interface PurchasesDashboardProps {
     totalPaid: number;
     totalPending: number;
     expensesByMonth: { month: string, paid: number, pending: number }[];
+    expensesByWeek: { week: string, paid: number, pending: number }[];
 }
 
 export function PurchasesDashboard({ 
     totalPaid,
     totalPending,
     expensesByMonth,
+    expensesByWeek,
 }: PurchasesDashboardProps) {
   return (
     <>
@@ -81,7 +83,7 @@ export function PurchasesDashboard({
             </CardContent>
           </Card>
         </div>
-        <div className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Despesas Mensais</CardTitle>
@@ -93,6 +95,42 @@ export function PurchasesDashboard({
                         <CartesianGrid vertical={false} />
                         <XAxis
                         dataKey="month"
+                        tickLine={false}
+                        tickMargin={10}
+                        axisLine={false}
+                        />
+                        <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value/1000}k`} />
+                        <ChartTooltip
+                         cursor={false}
+                         content={<ChartTooltipContent indicator="dot" />}
+                        />
+                        <ChartLegend content={<ChartLegendContent />} />
+                        <Bar
+                          dataKey="paid"
+                          fill="var(--color-paid)"
+                          radius={4}
+                        />
+                         <Bar
+                          dataKey="pending"
+                          fill="var(--color-pending)"
+                          radius={4}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Despesas por Semana</CardTitle>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                 <ResponsiveContainer>
+                    <BarChart data={expensesByWeek.slice(-6)}>
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                        dataKey="week"
                         tickLine={false}
                         tickMargin={10}
                         axisLine={false}
