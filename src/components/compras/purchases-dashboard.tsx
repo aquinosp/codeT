@@ -4,6 +4,7 @@
 import type { ComponentProps } from "react"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts"
 import { CheckCircle, Clock, DollarSign } from "lucide-react"
+import { useRouter, usePathname } from "next/navigation"
 
 import {
   Card,
@@ -18,6 +19,8 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart"
+import type { Period } from "../dashboard/dashboard-charts"
+import { Button } from "../ui/button"
 
 const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
     paid: {
@@ -30,11 +33,45 @@ const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
     },
 };
 
+const periodLabels: Record<Period, string> = {
+  today: 'Hoje',
+  week: 'Semana',
+  month: 'Mês',
+  year: 'Ano',
+};
+
+function DateFilter({ currentPeriod }: { currentPeriod: Period }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handlePeriodChange = (period: Period) => {
+    const params = new URLSearchParams();
+    params.set('period', period);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      {(['today', 'week', 'month', 'year'] as Period[]).map((period) => (
+        <Button
+          key={period}
+          variant={currentPeriod === period ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => handlePeriodChange(period)}
+        >
+          {periodLabels[period]}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
 interface PurchasesDashboardProps {
     totalPaid: number;
     totalPending: number;
     expensesByMonth: { month: string, paid: number, pending: number }[];
     expensesByWeek: { week: string, paid: number, pending: number }[];
+    period: Period;
 }
 
 export function PurchasesDashboard({ 
@@ -42,9 +79,16 @@ export function PurchasesDashboard({
     totalPending,
     expensesByMonth,
     expensesByWeek,
+    period,
 }: PurchasesDashboardProps) {
   return (
     <>
+        <div className="flex items-center justify-between">
+          <h1 className="font-headline text-3xl font-bold text-foreground">
+            Dashboard de Compras
+          </h1>
+          <DateFilter currentPeriod={period} />
+        </div>
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
