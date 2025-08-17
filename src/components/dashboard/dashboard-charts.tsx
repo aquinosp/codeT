@@ -144,6 +144,7 @@ export function DashboardCharts({
     revenueByTechnician,
     period
 }: DashboardChartsProps) {
+    const totalOs = osStatusData.reduce((acc, curr) => acc + curr.count, 0);
   return (
     <>
         <DateFilter currentPeriod={period} />
@@ -269,34 +270,16 @@ export function DashboardCharts({
                       dataKey="count"
                       nameKey="name"
                       innerRadius={60}
-                      strokeWidth={2}
+                      strokeWidth={5}
                       labelLine={false}
-                      label={({
-                          cy,
-                          midAngle,
-                          innerRadius,
-                          outerRadius,
-                          value,
-                        }) => {
-                          const RADIAN = Math.PI / 180;
-                          const radius = 25 + innerRadius + (outerRadius - innerRadius);
-                          const x = cy + radius * Math.cos(-midAngle * RADIAN);
-                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                          return (
-                            <text
-                              x={x}
-                              y={y}
-                              className="fill-muted-foreground text-sm font-bold"
-                              textAnchor={x > cy ? "start" : "end"}
-                              dominantBaseline="central"
-                            >
-                              {value}
-                            </text>
-                          );
-                      }}
                     >
+                      <LabelList
+                        dataKey="count"
+                        className="fill-background text-lg font-bold"
+                        position="inside"
+                      />
                       {osStatusData.map((entry) => (
-                          <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} />
+                          <Cell key={`cell-${entry.name}`} fill={chartConfig[entry.name as keyof typeof chartConfig]?.color} className="stroke-background outline-none ring-0 focus-visible:ring-0" />
                       ))}
                     </Pie>
                     <ChartLegend content={<ChartLegendContent nameKey="name" />} className="flex-wrap" />
