@@ -100,12 +100,20 @@ export function NewProductSheet({ isEditing = false, product, trigger }: NewProd
 
   async function onSubmit(values: z.infer<typeof productSchema>) {
     try {
+      // Create a clean data object by removing undefined values
+      const cleanValues: { [key: string]: any } = {};
+      for (const key in values) {
+        if ((values as any)[key] !== undefined) {
+          cleanValues[key] = (values as any)[key];
+        }
+      }
+
       if(isEditing && product) {
         const productRef = doc(db, "products", product.id);
-        await updateDoc(productRef, values);
+        await updateDoc(productRef, cleanValues);
         toast({ title: "Item Atualizado", description: `O item ${values.name} foi atualizado com sucesso.` })
       } else {
-        await addDoc(collection(db, "products"), values);
+        await addDoc(collection(db, "products"), cleanValues);
         toast({ title: "Item Salvo", description: `O item ${values.name} foi salvo com sucesso.` })
       }
       form.reset()
