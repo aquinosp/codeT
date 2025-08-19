@@ -270,7 +270,6 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <p className="text-sm font-medium">{order.customer?.name || 'Não informado'}</p>
-                    <p className="text-sm font-medium text-muted-foreground">{order.technician || 'Técnico não atribuído'}</p>
                     <p className="text-sm text-muted-foreground truncate mt-1">{order.description}</p>
                     <div className="mt-2 flex justify-between items-center">
                        <Badge variant={order.status === 'Cancelada' ? 'secondary' : 'default'}>{order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Badge>
