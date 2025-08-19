@@ -5,7 +5,7 @@
 import React, { useState, DragEvent, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { ServiceOrder } from '@/lib/types';
+import type { Person, ServiceOrder } from '@/lib/types';
 import { MoreHorizontal, Timer, Printer, Trash2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
@@ -17,11 +17,13 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { NewOsSheet } from './new-os-sheet';
-import { doc, updateDoc } from "firebase/firestore"
+import { doc, updateDoc, collection, onSnapshot, query, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 type Status = ServiceOrder['status'];
 
@@ -67,6 +69,53 @@ function SlaTimer({ date }: { date: Date }) {
   )
 }
 
+function AssignTechnicianDialog({ 
+    order, 
+    technicians, 
+    onOpenChange, 
+    onConfirm 
+}: { 
+    order: ServiceOrder | null, 
+    technicians: Person[], 
+    onOpenChange: (isOpen: boolean) => void, 
+    onConfirm: (technician: string) => void 
+}) {
+    const [selectedTechnician, setSelectedTechnician] = useState<string | undefined>();
+
+    if (!order) return null;
+
+    return (
+        <Dialog open={!!order} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Atribuir Técnico</DialogTitle>
+                    <DialogDescription>
+                        É necessário atribuir um técnico para mover a OS <span className="font-bold">{order.osNumber}</span> para "Em Progresso".
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Select onValueChange={setSelectedTechnician} value={selectedTechnician}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Selecione um técnico" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {technicians.map(t => (
+                                <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                    <Button onClick={() => selectedTechnician && onConfirm(selectedTechnician)} disabled={!selectedTechnician}>
+                        Confirmar e Mover
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 interface OsKanbanBoardProps {
   orders: ServiceOrder[];
   onPrint: (order: ServiceOrder) => void;
@@ -76,7 +125,17 @@ interface OsKanbanBoardProps {
 export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps) {
   const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<ServiceOrder | null>(null);
+  const [orderToAssign, setOrderToAssign] = useState<ServiceOrder | null>(null);
+  const [technicians, setTechnicians] = useState<Person[]>([]);
   const { toast } = useToast();
+
+   useEffect(() => {
+    const q = query(collection(db, 'people'), where('type', '==', 'Funcionário'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setTechnicians(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person)));
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>, orderId: string) => {
     e.dataTransfer.setData('text/plain', orderId);
@@ -93,19 +152,40 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
     setDraggedOrder(null);
     const order = orders.find(o => o.id === orderId);
     
-    if (order && newStatus === 'Entregue' && order.status !== 'Entregue') {
+    if (!order) return;
+
+    if (newStatus === 'Em Progresso' && !order.technician) {
+        setOrderToAssign(order);
+        return;
+    }
+    
+    if (newStatus === 'Entregue' && order.status !== 'Entregue') {
         onDeliver(order);
-    } else if (order) {
+    } else {
         const orderRef = doc(db, "serviceOrders", orderId);
         await updateDoc(orderRef, { status: newStatus });
     }
   };
 
-  const handleSetStatus = async (orderId: string, status: Status) => {
-    const orderRef = doc(db, "serviceOrders", orderId);
+  const handleSetStatus = async (order: ServiceOrder, status: Status) => {
+     if (status === 'Em Progresso' && !order.technician) {
+        setOrderToAssign(order);
+        return;
+    }
+    const orderRef = doc(db, "serviceOrders", order.id);
     await updateDoc(orderRef, { status });
     toast({ title: "Status Atualizado!", description: `A OS foi movida para ${status}.`})
   }
+  
+  const handleAssignTechnicianConfirm = async (technician: string) => {
+    if (orderToAssign) {
+      const orderRef = doc(db, "serviceOrders", orderToAssign.id);
+      await updateDoc(orderRef, { technician, status: 'Em Progresso' });
+      toast({ title: "Técnico Atribuído!", description: `A OS foi atribuída a ${technician} e movida.` });
+      setOrderToAssign(null);
+    }
+  };
+
 
   const handleCancelConfirm = async () => {
     if (orderToCancel) {
@@ -163,7 +243,7 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
                         <NewOsSheet isEditing order={order} onPrint={onPrint} onDeliver={onDeliver} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={order.status === 'Cancelada'}>Editar</DropdownMenuItem>} />
                         <DropdownMenuItem onClick={() => onPrint(order)}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleSetStatus(order.id, 'Pronta')} disabled={order.status === 'Cancelada' || order.status === 'Entregue'}>Marcar como Pronta</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSetStatus(order, 'Pronta')} disabled={order.status === 'Cancelada' || order.status === 'Entregue'}>Marcar como Pronta</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onDeliver(order)} disabled={order.status === 'Cancelada' || order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setOrderToCancel(order)} className="text-red-500 hover:text-red-500 focus:text-red-500" disabled={order.status === 'Cancelada'}>
@@ -175,7 +255,8 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <p className="text-sm font-medium">{order.customer?.name || 'Não informado'}</p>
-                    <p className="text-sm text-muted-foreground truncate">{order.description}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{order.technician || 'Técnico não atribuído'}</p>
+                    <p className="text-sm text-muted-foreground truncate mt-1">{order.description}</p>
                     <div className="mt-2 flex justify-between items-center">
                        <Badge variant={order.status === 'Cancelada' ? 'secondary' : 'default'}>{order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Badge>
                        {order.status !== 'Entregue' && order.status !== 'Pronta' && order.status !== 'Cancelada' && <SlaTimer date={order.createdAt} />}
@@ -205,6 +286,12 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
             </AlertDialogContent>
         </AlertDialog>
     )}
+     <AssignTechnicianDialog 
+        order={orderToAssign}
+        technicians={technicians}
+        onOpenChange={(isOpen) => !isOpen && setOrderToAssign(null)}
+        onConfirm={handleAssignTechnicianConfirm}
+      />
     </>
   );
 }
