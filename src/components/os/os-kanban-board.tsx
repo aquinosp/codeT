@@ -90,7 +90,7 @@ function AssignTechnicianDialog({
                 <DialogHeader>
                     <DialogTitle>Atribuir Técnico</DialogTitle>
                     <DialogDescription>
-                        É necessário atribuir um técnico para mover a OS <span className="font-bold">{order.osNumber}</span> para "Em Progresso".
+                        É necessário atribuir um técnico para mover a OS <span className="font-bold">{order.osNumber}</span> para a próxima etapa.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -125,7 +125,7 @@ interface OsKanbanBoardProps {
 export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps) {
   const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<ServiceOrder | null>(null);
-  const [orderToAssign, setOrderToAssign] = useState<ServiceOrder | null>(null);
+  const [orderToAssign, setOrderToAssign] = useState<{order: ServiceOrder, newStatus: Status} | null>(null);
   const [technicians, setTechnicians] = useState<Person[]>([]);
   const { toast } = useToast();
 
@@ -154,8 +154,8 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
     
     if (!order) return;
 
-    if (newStatus === 'Em Progresso' && !order.technician) {
-        setOrderToAssign(order);
+    if (newStatus !== 'Pendente' && !order.technician) {
+        setOrderToAssign({order, newStatus});
         return;
     }
     
@@ -168,10 +168,16 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
   };
 
   const handleSetStatus = async (order: ServiceOrder, status: Status) => {
-     if (status === 'Em Progresso' && !order.technician) {
-        setOrderToAssign(order);
+     if (status !== 'Pendente' && !order.technician) {
+        setOrderToAssign({order, newStatus: status});
         return;
     }
+    
+    if (status === 'Entregue') {
+        onDeliver(order);
+        return;
+    }
+
     const orderRef = doc(db, "serviceOrders", order.id);
     await updateDoc(orderRef, { status });
     toast({ title: "Status Atualizado!", description: `A OS foi movida para ${status}.`})
@@ -179,9 +185,18 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
   
   const handleAssignTechnicianConfirm = async (technician: string) => {
     if (orderToAssign) {
-      const orderRef = doc(db, "serviceOrders", orderToAssign.id);
-      await updateDoc(orderRef, { technician, status: 'Em Progresso' });
-      toast({ title: "Técnico Atribuído!", description: `A OS foi atribuída a ${technician} e movida.` });
+      const { order, newStatus } = orderToAssign;
+      const orderRef = doc(db, "serviceOrders", order.id);
+      
+      if (newStatus === 'Entregue') {
+          await updateDoc(orderRef, { technician });
+          const updatedOrder = { ...order, technician };
+          onDeliver(updatedOrder);
+      } else {
+          await updateDoc(orderRef, { technician, status: newStatus });
+          toast({ title: "Técnico Atribuído!", description: `A OS foi atribuída a ${technician} e movida.` });
+      }
+
       setOrderToAssign(null);
     }
   };
@@ -244,7 +259,7 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
                         <DropdownMenuItem onClick={() => onPrint(order)}><Printer className="mr-2 h-4 w-4" /> Imprimir</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleSetStatus(order, 'Pronta')} disabled={order.status === 'Cancelada' || order.status === 'Entregue'}>Marcar como Pronta</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDeliver(order)} disabled={order.status === 'Cancelada' || order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSetStatus(order, 'Entregue')} disabled={order.status === 'Cancelada' || order.status === 'Entregue'}>Registrar Entrega</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setOrderToCancel(order)} className="text-red-500 hover:text-red-500 focus:text-red-500" disabled={order.status === 'Cancelada'}>
                          <Trash2 className="mr-2 h-4 w-4" />
@@ -287,7 +302,7 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
         </AlertDialog>
     )}
      <AssignTechnicianDialog 
-        order={orderToAssign}
+        order={orderToAssign?.order ?? null}
         technicians={technicians}
         onOpenChange={(isOpen) => !isOpen && setOrderToAssign(null)}
         onConfirm={handleAssignTechnicianConfirm}
