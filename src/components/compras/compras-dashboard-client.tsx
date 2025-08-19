@@ -3,13 +3,14 @@
 
 import { collection, getDocs, query, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Purchase, PurchaseDocument } from '@/lib/types';
+import type { PurchaseDocument } from '@/lib/types';
 import { PurchasesDashboard } from '@/components/compras/purchases-dashboard';
 import { useEffect, useState } from 'react';
 import { startOfWeek, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useSearchParams } from 'next/navigation';
 import type { Period } from '@/components/dashboard/dashboard-charts';
+import { Skeleton } from '../ui/skeleton';
 
 type DashboardData = {
   totalPaid: number;
@@ -62,20 +63,7 @@ export function ComprasDashboardClient() {
         ...doc.data() as PurchaseDocument,
         id: doc.id,
         paymentDate: (doc.data().paymentDate as Timestamp).toDate(),
-      }) as Purchase);
-
-      const paidInPeriod = allPurchases.filter(p => {
-        const paymentDate = new Date(p.paymentDate);
-        return p.status === 'Pago' && paymentDate >= start && paymentDate <= end;
-      });
-
-      const pendingInPeriod = allPurchases.filter(p => {
-        const paymentDate = new Date(p.paymentDate);
-        return p.status === 'Previsão' && paymentDate >= start && paymentDate <= end;
-      });
-      
-      const totalPaid = paidInPeriod.reduce((acc, p) => acc + p.total, 0);
-      const totalPending = pendingInPeriod.reduce((acc, p) => acc + p.total, 0);
+      }));
       
       const allPeriodPurchases = allPurchases.filter(p => {
         const paymentDate = new Date(p.paymentDate);
@@ -84,6 +72,14 @@ export function ComprasDashboardClient() {
         return isPaidInPeriod || isPendingInPeriod;
       });
 
+      const totalPaid = allPeriodPurchases
+        .filter(p => p.status === 'Pago')
+        .reduce((acc, p) => acc + p.total, 0);
+
+      const totalPending = allPeriodPurchases
+        .filter(p => p.status === 'Previsão')
+        .reduce((acc, p) => acc + p.total, 0);
+      
 
       const expensesByMonth = allPeriodPurchases
         .reduce((acc, p) => {
@@ -118,7 +114,7 @@ export function ComprasDashboardClient() {
             
             let weekData = acc.find(item => item.week === weekLabel);
             if(!weekData) {
-                weekData = { week: weekLabel, weekStart, paid: 0, pending: 0 };
+                weekData = { week: weekLabel, weekStart: weekStart, paid: 0, pending: 0 };
                 acc.push(weekData);
             }
             
@@ -139,11 +135,32 @@ export function ComprasDashboardClient() {
     }
 
     setData(null);
-    getPurchasesDashboardData(period);
+    getPurchasesDashboardData(period).finally(() => console.log('finished'));
   }, [period]);
 
   if (!data) {
-     return null; // The parent component will show the skeleton
+     return (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <Skeleton className="h-10 w-80" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-9 w-16" />
+              <Skeleton className="h-9 w-20" />
+              <Skeleton className="h-9 w-16" />
+              <Skeleton className="h-9 w-16" />
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-80 w-full" />
+            <Skeleton className="h-80 w-full" />
+          </div>
+        </>
+      )
   }
 
   return (

@@ -33,8 +33,10 @@ function DashboardSkeleton() {
         <Skeleton className="h-28 w-full" />
         <Skeleton className="h-28 w-full" />
       </div>
-      <Skeleton className="h-80 w-full" />
-      <Skeleton className="h-80 w-full mt-4" />
+      <div className="grid gap-4 md:grid-cols-2">
+        <Skeleton className="h-80 w-full" />
+        <Skeleton className="h-80 w-full" />
+      </div>
     </>
   );
 }
