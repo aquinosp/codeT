@@ -85,7 +85,7 @@ export function DashboardClient() {
 
         const [soSnapshot, peopleSnapshot, purchasesSnapshot] = await Promise.all([
             getDocs(soQuery),
-            getDocs(peopleSnapshot),
+            getDocs(peopleQuery),
             getDocs(purchasesQuery),
         ]);
 
