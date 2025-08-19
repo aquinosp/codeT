@@ -33,7 +33,7 @@ const columnTitles: Record<Status, string> = {
   'Em Progresso': 'Em Progresso',
   'Aguardando Peças': 'Aguardando Peças',
   'Pronta': 'Pronta',
-  'Entregue': 'Entregue e Cancelada',
+  'Entregue': 'Entregue',
   'Cancelada': 'Cancelada',
 };
 
