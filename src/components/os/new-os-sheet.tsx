@@ -36,7 +36,7 @@ import { Combobox } from "../ui/combobox"
 const osSchema = z.object({
   osNumber: z.string(),
   customer: z.string().optional(),
-  technician: z.string().min(1, "Técnico é obrigatório"),
+  technician: z.string().optional(),
   description: z.string().optional(),
   items: z.array(z.object({
     productId: z.string().min(1, "Selecione um item"),
@@ -183,7 +183,7 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
         id: isEditing ? order!.id : newId!,
         osNumber: values.osNumber,
         customer: customer,
-        technician: values.technician,
+        technician: values.technician || "",
         description: values.description || "",
         status: isEditing ? order!.status : 'Pendente',
         createdAt: isEditing ? order!.createdAt : new Date(),
@@ -198,7 +198,7 @@ export function NewOsSheet({ isEditing = false, order, trigger, onPrint, onDeliv
     try {
       const osData: Omit<ServiceOrderDocument, 'createdAt'> & {createdAt?: Timestamp} = {
         osNumber: values.osNumber,
-        technician: values.technician,
+        technician: values.technician || "",
         description: values.description || "",
         status: isEditing ? order!.status : 'Pendente',
         total: totalValue,
