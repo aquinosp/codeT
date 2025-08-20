@@ -218,11 +218,11 @@ export function OsKanbanBoard({ orders, onPrint, onDeliver }: OsKanbanBoardProps
 
   return (
     <>
-    <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-y-auto">
       {columns.map(status => (
         <div
           key={status}
-          className={cn("rounded-lg p-4 flex flex-col gap-4", columnColors[status])}
+          className={cn("rounded-lg p-2 md:p-4 flex flex-col gap-4", columnColors[status])}
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, status)}
         >

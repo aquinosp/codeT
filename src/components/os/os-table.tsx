@@ -109,11 +109,11 @@ export function OsTable({ orders, onPrint, onDeliver }: OsTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>OS</TableHead>
+              <TableHead className="w-[100px]">OS</TableHead>
               <TableHead>Cliente</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>SLA</TableHead>
-              <TableHead className="text-right">Valor Total</TableHead>
+              <TableHead className="hidden md:table-cell">Status</TableHead>
+              <TableHead className="hidden lg:table-cell">SLA</TableHead>
+              <TableHead className="text-right hidden md:table-cell">Valor Total</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -121,14 +121,20 @@ export function OsTable({ orders, onPrint, onDeliver }: OsTableProps) {
             {orders.map((order) => (
               <TableRow key={order.id} className={order.status === 'Cancelada' ? 'bg-gray-100 dark:bg-gray-900/50' : ''}>
                 <TableCell className="font-medium">{order.osNumber}</TableCell>
-                <TableCell>{order.customer?.name || 'Não informado'}</TableCell>
                 <TableCell>
+                  <div className="font-medium">{order.customer?.name || 'Não informado'}</div>
+                  <div className="text-sm text-muted-foreground md:hidden">
+                    <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
+                     - {order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
                   <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden lg:table-cell">
                   {order.status !== 'Entregue' && order.status !== 'Pronta' && order.status !== 'Cancelada' ? <SlaTimer date={order.createdAt} /> : '-'}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right hidden md:table-cell">
                   {order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </TableCell>
                 <TableCell className="text-right">

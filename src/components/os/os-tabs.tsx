@@ -21,7 +21,7 @@ interface OsTabsProps {
 export default function OsTabs({ orders, onTabChange, activeTab, onPrint, onDeliver, dateFilter, onDateFilterChange }: OsTabsProps) {
   return (
     <div className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-semibold text-foreground">
           Ordens de Serviço
         </h1>
@@ -29,7 +29,7 @@ export default function OsTabs({ orders, onTabChange, activeTab, onPrint, onDeli
             <NewOsSheet onPrint={onPrint} onDeliver={onDeliver} />
         </div>
       </div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <Tabs 
                 defaultValue="lista" 
                 value={activeTab} 
