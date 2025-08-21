@@ -125,7 +125,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
         if(isEditing && purchase) {
             const purchaseRef = doc(db, 'purchases', purchase.id);
-            const { installments, receiptFile, ...rest } = values;
+            const { receiptFile, ...rest } = values;
 
             const purchaseData: any = {
                 ...rest,
@@ -142,21 +142,23 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
         } else {
             const batch = writeBatch(db);
-            const { installments, total, paymentDate, receiptFile, ...rest } = values;
+            const { receiptFile, ...rest } = values;
             
-            const installmentValue = total / installments;
+            const installmentValue = rest.total / rest.installments;
 
-            for (let i = 0; i < installments; i++) {
+            for (let i = 0; i < rest.installments; i++) {
                 const docRef = doc(collection(db, "purchases"));
-                const currentPaymentDate = addMonths(paymentDate, i);
+                const currentPaymentDate = addMonths(rest.paymentDate, i);
                 
                 const purchaseData = {
-                    ...rest,
+                    supplierId: rest.supplierId,
+                    itemName: rest.itemName,
+                    invoice: rest.invoice,
+                    status: (i === 0) ? rest.status : 'Previsão' as const,
                     total: installmentValue,
                     paymentDate: Timestamp.fromDate(currentPaymentDate),
-                    installments: `${i + 1}/${installments}`,
-                    status: (i === 0) ? values.status : 'Previsão' as const,
-                    receiptUrl: i === 0 ? receiptUrl : undefined, // Add receipt only to the first installment
+                    installments: `${i + 1}/${rest.installments}`,
+                    receiptUrl: i === 0 ? receiptUrl : undefined,
                 };
                 batch.set(docRef, purchaseData);
             }
@@ -165,7 +167,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
             toast({
                 title: "Compra registrada!",
-                description: `${installments} parcela(s) foram criadas com sucesso.`
+                description: `${rest.installments} parcela(s) foram criadas com sucesso.`
             });
         }
         
