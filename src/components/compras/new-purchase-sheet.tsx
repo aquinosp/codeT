@@ -2,7 +2,7 @@
 
 "use client"
 
-import { Plus, Edit } from "lucide-react"
+import { Plus } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -73,6 +73,8 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
     }
   });
 
+  const { register } = form;
+
   const isPaid = isEditing && purchase?.status === 'Pago';
 
   useEffect(() => {
@@ -126,13 +128,16 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
         if (isEditing && purchase) {
             const purchaseRef = doc(db, 'purchases', purchase.id);
-            const { receiptFile: _receiptFile, installments: _installments, ...rest } = values;
+            const { receiptFile: _receiptFile, ...rest } = values;
 
-            const purchaseData: Partial<Purchase> = {
+            const purchaseData: { [key: string]: any } = {
                 ...rest,
-                paymentDate: values.paymentDate,
-                receiptUrl: receiptUrl
+                paymentDate: Timestamp.fromMillis(values.paymentDate.getTime()),
             };
+
+            if (receiptUrl) {
+                purchaseData.receiptUrl = receiptUrl;
+            }
             
             await updateDoc(purchaseRef, purchaseData);
             toast({
@@ -149,7 +154,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 const docRef = doc(collection(db, "purchases"));
                 const currentPaymentDate = addMonths(rest.paymentDate, i);
                 
-                const purchaseData = {
+                const purchaseData: { [key: string]: any } = {
                     supplierId: rest.supplierId,
                     itemName: rest.itemName,
                     invoice: rest.invoice,
@@ -157,8 +162,12 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                     total: installmentValue,
                     paymentDate: Timestamp.fromMillis(currentPaymentDate.getTime()),
                     installments: `${i + 1}/${rest.installments}`,
-                    receiptUrl: i === 0 ? receiptUrl : undefined,
                 };
+
+                if (i === 0 && receiptUrl) {
+                  purchaseData.receiptUrl = receiptUrl;
+                }
+
                 batch.set(docRef, purchaseData);
             }
 
@@ -315,31 +324,24 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                         </FormItem>
                     )}
                 />
-                 <FormField
-                    name="receiptFile"
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Comprovante (PDF, Imagem)</FormLabel>
-                            {purchase?.receiptUrl && (
-                                <div className="text-sm">
-                                    <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                        Ver comprovante atual
-                                    </Link>
-                                </div>
-                            )}
-                            <FormControl>
-                                <Input
-                                    type="file"
-                                    accept="image/*,application/pdf"
-                                    ref={receiptFileRef}
-                                    onChange={(e) => field.onChange(e.target.files)}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
+                 <FormItem>
+                    <FormLabel>Comprovante (PDF, Imagem)</FormLabel>
+                    {purchase?.receiptUrl && (
+                        <div className="text-sm">
+                            <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                Ver comprovante atual
+                            </Link>
+                        </div>
                     )}
-                />
+                    <FormControl>
+                        <Input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            {...register("receiptFile")}
+                        />
+                    </FormControl>
+                    <FormMessage>{form.formState.errors.receiptFile?.message?.toString()}</FormMessage>
+                </FormItem>
 
                  <FormField
                     name="status"
