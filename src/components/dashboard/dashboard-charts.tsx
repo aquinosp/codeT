@@ -157,7 +157,7 @@ export function DashboardCharts({
               <DollarSign className="h-5 w-5 text-primary-foreground/80" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl md:text-3xl font-bold">{monthlyRevenue.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
+              <div className="text-2xl font-bold">{monthlyRevenue.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
               <p className="text-xs text-primary-foreground/80">
                 Total para o período selecionado
               </p>
@@ -169,7 +169,7 @@ export function DashboardCharts({
               <ShoppingCart className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl md:text-3xl font-bold">{monthlyPurchases.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
+              <div className="text-2xl font-bold">{monthlyPurchases.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</div>
                <p className="text-xs text-muted-foreground">
                 Total de despesas no período
               </p>
@@ -181,7 +181,7 @@ export function DashboardCharts({
               <Scale className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={cn("text-2xl md:text-3xl font-bold", balance >= 0 ? 'text-green-600' : 'text-red-600')}>
+              <div className={cn("text-2xl font-bold", balance >= 0 ? 'text-green-600' : 'text-red-600')}>
                 {balance.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -195,7 +195,7 @@ export function DashboardCharts({
               <Wrench className="h-5 w-5 text-accent-foreground/80" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl md:text-3xl font-bold">{openServiceOrders}</div>
+              <div className="text-2xl font-bold">{openServiceOrders}</div>
               <p className="text-sm font-medium text-accent-foreground/80">
                 {openServiceOrdersValue.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
               </p>
@@ -207,7 +207,7 @@ export function DashboardCharts({
               <Users className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl md:text-3xl font-bold">+{newCustomers}</div>
+              <div className="text-2xl font-bold">+{newCustomers}</div>
               <p className="text-xs text-muted-foreground">
                 No período selecionado
               </p>
