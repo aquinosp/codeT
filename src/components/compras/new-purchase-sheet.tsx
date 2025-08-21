@@ -23,13 +23,15 @@ import { cn } from "@/lib/utils"
 import { format, addMonths } from "date-fns"
 import { useEffect, useState } from "react"
 import type { Person, Purchase } from "@/lib/types"
-import { collection, onSnapshot, writeBatch, Timestamp, doc, updateDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { collection, onSnapshot, writeBatch, Timestamp, doc, updateDoc, addDoc } from "firebase/firestore"
+import { db, storage } from "@/lib/firebase"
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { useToast } from "@/hooks/use-toast"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
+import Link from "next/link"
 
 const purchaseSchema = z.object({
   supplierId: z.string().min(1, "Fornecedor é obrigatório"),
@@ -39,6 +41,7 @@ const purchaseSchema = z.object({
   total: z.coerce.number().min(0.01, "Valor deve ser maior que zero"),
   paymentDate: z.date({ required_error: "Data é obrigatória" }),
   status: z.enum(['Previsão', 'Pago']),
+  receiptFile: z.any().optional(),
 });
 
 
@@ -52,6 +55,7 @@ interface NewPurchaseSheetProps {
 export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPurchaseSheetProps) {
   const [people, setPeople] = useState<Person[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof purchaseSchema>>({
@@ -64,6 +68,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
       total: 0,
       paymentDate: new Date(),
       status: 'Previsão',
+      receiptFile: null,
     }
   });
 
@@ -79,6 +84,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 invoice: purchase.invoice || '',
                 status: purchase.status || 'Previsão',
                 total: purchase.total || 0,
+                receiptFile: null,
             });
         } else {
             form.reset({
@@ -89,6 +95,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 total: 0,
                 paymentDate: new Date(),
                 status: 'Previsão',
+                receiptFile: null,
             });
         }
     }
@@ -105,15 +112,26 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
   }, []);
   
   const onSubmit = async (values: z.infer<typeof purchaseSchema>) => {
+    setIsSaving(true);
     try {
+        let receiptUrl: string | undefined = purchase?.receiptUrl;
+        const receiptFile = values.receiptFile?.[0];
+
+        if (receiptFile) {
+            const storageRef = ref(storage, `purchase-receipts/${Date.now()}-${receiptFile.name}`);
+            const snapshot = await uploadBytes(storageRef, receiptFile);
+            receiptUrl = await getDownloadURL(snapshot.ref);
+        }
+
         if(isEditing && purchase) {
             const purchaseRef = doc(db, 'purchases', purchase.id);
-            const { installments, ...rest } = values;
+            const { installments, receiptFile, ...rest } = values;
 
-            const purchaseData = {
+            const purchaseData: any = {
                 ...rest,
                 paymentDate: Timestamp.fromDate(values.paymentDate),
                 installments: purchase.installments, 
+                receiptUrl: receiptUrl
             };
             
             await updateDoc(purchaseRef, purchaseData);
@@ -124,7 +142,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
         } else {
             const batch = writeBatch(db);
-            const { installments, total, paymentDate, ...rest } = values;
+            const { installments, total, paymentDate, receiptFile, ...rest } = values;
             
             const installmentValue = total / installments;
 
@@ -138,6 +156,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                     paymentDate: Timestamp.fromDate(currentPaymentDate),
                     installments: `${i + 1}/${installments}`,
                     status: (i === 0) ? values.status : 'Previsão' as const,
+                    receiptUrl: i === 0 ? receiptUrl : undefined, // Add receipt only to the first installment
                 };
                 batch.set(docRef, purchaseData);
             }
@@ -159,6 +178,8 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
             description: "Ocorreu um erro ao tentar salvar a compra.",
             variant: "destructive",
         })
+    } finally {
+        setIsSaving(false);
     }
   }
   
@@ -292,6 +313,33 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                     )}
                 />
                  <FormField
+                    name="receiptFile"
+                    control={form.control}
+                    render={({ field: { onChange, value, ...rest } }) => (
+                        <FormItem>
+                            <FormLabel>Comprovante (PDF, Imagem)</FormLabel>
+                             {purchase?.receiptUrl && (
+                                <div className="text-sm">
+                                    <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                        Ver comprovante atual
+                                    </Link>
+                                </div>
+                            )}
+                            <FormControl>
+                                <Input 
+                                    type="file" 
+                                    accept="image/*,application/pdf"
+                                    onChange={(e) => {
+                                        onChange(e.target.files);
+                                    }}
+                                    {...rest}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
                     name="status"
                     control={form.control}
                     render={({ field }) => (
@@ -316,7 +364,9 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 <SheetClose asChild>
                     <Button variant="outline">Cancelar</Button>
                 </SheetClose>
-                <Button type="submit">Salvar</Button>
+                <Button type="submit" disabled={isSaving}>
+                    {isSaving ? 'Salvando...' : 'Salvar'}
+                </Button>
             </SheetFooter>
             </form>
         </Form>

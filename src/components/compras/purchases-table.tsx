@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Calendar as CalendarIcon, Download, MoreHorizontal } from "lucide-react"
+import { Calendar as CalendarIcon, Download, MoreHorizontal, Paperclip } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { NewPurchaseSheet } from "./new-purchase-sheet"
@@ -19,6 +19,7 @@ import type { Purchase } from "@/lib/types"
 import { Badge } from "../ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "../ui/dropdown-menu"
 import type { DateRange } from "react-day-picker"
+import Link from "next/link"
 
 interface PurchasesTableProps {
   purchases: Purchase[];
@@ -69,6 +70,7 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead></TableHead>
               <TableHead>Nota Fiscal</TableHead>
               <TableHead>Fornecedor</TableHead>
               <TableHead>Item</TableHead>
@@ -82,6 +84,15 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
           <TableBody>
             {filteredPurchases.map((purchase) => (
               <TableRow key={purchase.id}>
+                <TableCell>
+                  {purchase.receiptUrl && (
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link href={purchase.receiptUrl} target="_blank">
+                        <Paperclip className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
+                </TableCell>
                 <TableCell className="font-medium">{purchase.invoice || '-'}</TableCell>
                 <TableCell>{purchase.supplier.name}</TableCell>
                 <TableCell>{purchase.itemName}</TableCell>

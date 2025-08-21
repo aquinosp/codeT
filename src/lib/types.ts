@@ -71,6 +71,7 @@ export type Purchase = {
   total: number;
   paymentDate: Date;
   status: 'Previsão' | 'Pago';
+  receiptUrl?: string;
 };
 
 
