@@ -81,7 +81,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
         if (isEditing && purchase) {
             form.reset({
                 ...purchase,
-                installments: parseInt(purchase.installments) || 1,
+                installments: parseInt(purchase.installments, 10) || 1,
                 supplierId: purchase.supplier.id,
                 invoice: purchase.invoice || '',
                 status: purchase.status || 'Previsão',
@@ -116,7 +116,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
   const onSubmit = async (values: z.infer<typeof purchaseSchema>) => {
     setIsSaving(true);
     try {
-        let receiptUrl: string | undefined = purchase?.receiptUrl;
+        let receiptUrl: string | undefined = isEditing ? purchase?.receiptUrl : undefined;
         const receiptFile = values.receiptFile?.[0];
 
         if (receiptFile) {
@@ -125,14 +125,13 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
             receiptUrl = await getDownloadURL(snapshot.ref);
         }
 
-        if(isEditing && purchase) {
+        if (isEditing && purchase) {
             const purchaseRef = doc(db, 'purchases', purchase.id);
-            const { receiptFile: _receiptFile, ...rest } = values;
+            const { receiptFile: _receiptFile, installments: _installments, ...rest } = values;
 
-            const purchaseData: any = {
+            const purchaseData = {
                 ...rest,
-                paymentDate: Timestamp.fromDate(values.paymentDate),
-                installments: purchase.installments, 
+                paymentDate: Timestamp.fromMillis(values.paymentDate.getTime()),
                 receiptUrl: receiptUrl
             };
             
@@ -141,7 +140,6 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 title: "Compra atualizada!",
                 description: "A compra foi atualizada com sucesso."
             });
-
         } else {
             const batch = writeBatch(db);
             const { receiptFile: _receiptFile, ...rest } = values;
@@ -156,9 +154,9 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                     supplierId: rest.supplierId,
                     itemName: rest.itemName,
                     invoice: rest.invoice,
-                    status: (i === 0) ? rest.status : 'Previsão' as const,
+                    status: (i === 0 && rest.status === 'Pago') ? 'Pago' : 'Previsão' as const,
                     total: installmentValue,
-                    paymentDate: Timestamp.fromDate(currentPaymentDate),
+                    paymentDate: Timestamp.fromMillis(currentPaymentDate.getTime()),
                     installments: `${i + 1}/${rest.installments}`,
                     receiptUrl: i === 0 ? receiptUrl : undefined,
                 };
@@ -174,7 +172,6 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
         }
         
         setIsOpen(false);
-
     } catch (error) {
         console.error("Error creating purchases: ", error);
         toast({
@@ -272,9 +269,9 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                         control={form.control}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Valor Total (R$)</FormLabel>
+                                <FormLabel>Valor {isEditing ? 'da Parcela' : 'Total'} (R$)</FormLabel>
                                 <FormControl>
-                                 <Input type="number" placeholder="R$ 0,00" {...field} value={field.value ?? ""} disabled={isPaid} />
+                                 <Input type="number" placeholder="R$ 0,00" {...field} value={field.value ?? ""} disabled={isPaid || (isEditing && form.getValues('installments') > 1)} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
