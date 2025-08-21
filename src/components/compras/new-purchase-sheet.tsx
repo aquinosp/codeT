@@ -21,7 +21,7 @@ import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format, addMonths } from "date-fns"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import type { Person, Purchase } from "@/lib/types"
 import { collection, onSnapshot, writeBatch, Timestamp, doc, updateDoc, addDoc } from "firebase/firestore"
 import { db, storage } from "@/lib/firebase"
@@ -57,6 +57,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const receiptFileRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof purchaseSchema>>({
     resolver: zodResolver(purchaseSchema),
@@ -71,8 +72,6 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
       receiptFile: null,
     }
   });
-
-  const receiptFileRef = form.register("receiptFile");
 
   const isPaid = isEditing && purchase?.status === 'Pago';
 
@@ -129,9 +128,9 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
             const purchaseRef = doc(db, 'purchases', purchase.id);
             const { receiptFile: _receiptFile, installments: _installments, ...rest } = values;
 
-            const purchaseData = {
+            const purchaseData: Partial<Purchase> = {
                 ...rest,
-                paymentDate: Timestamp.fromMillis(values.paymentDate.getTime()),
+                paymentDate: values.paymentDate,
                 receiptUrl: receiptUrl
             };
             
@@ -171,6 +170,9 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
             });
         }
         
+        if (receiptFileRef.current) {
+            receiptFileRef.current.value = '';
+        }
         setIsOpen(false);
     } catch (error) {
         console.error("Error creating purchases: ", error);
@@ -313,24 +315,31 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                         </FormItem>
                     )}
                 />
-                 <FormItem>
-                    <FormLabel>Comprovante (PDF, Imagem)</FormLabel>
-                        {purchase?.receiptUrl && (
-                        <div className="text-sm">
-                            <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                Ver comprovante atual
-                            </Link>
-                        </div>
+                 <FormField
+                    name="receiptFile"
+                    control={form.control}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Comprovante (PDF, Imagem)</FormLabel>
+                            {purchase?.receiptUrl && (
+                                <div className="text-sm">
+                                    <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                        Ver comprovante atual
+                                    </Link>
+                                </div>
+                            )}
+                            <FormControl>
+                                <Input
+                                    type="file"
+                                    accept="image/*,application/pdf"
+                                    ref={receiptFileRef}
+                                    onChange={(e) => field.onChange(e.target.files)}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
                     )}
-                    <FormControl>
-                        <Input 
-                            type="file" 
-                            accept="image/*,application/pdf"
-                            {...receiptFileRef}
-                        />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
+                />
 
                  <FormField
                     name="status"
