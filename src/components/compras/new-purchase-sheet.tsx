@@ -72,6 +72,8 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
     }
   });
 
+  const receiptFileRef = form.register("receiptFile");
+
   const isPaid = isEditing && purchase?.status === 'Pago';
 
   useEffect(() => {
@@ -125,7 +127,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
         if(isEditing && purchase) {
             const purchaseRef = doc(db, 'purchases', purchase.id);
-            const { receiptFile, ...rest } = values;
+            const { receiptFile: _receiptFile, ...rest } = values;
 
             const purchaseData: any = {
                 ...rest,
@@ -142,7 +144,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
         } else {
             const batch = writeBatch(db);
-            const { receiptFile, ...rest } = values;
+            const { receiptFile: _receiptFile, ...rest } = values;
             
             const installmentValue = rest.total / rest.installments;
 
@@ -314,33 +316,25 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                         </FormItem>
                     )}
                 />
-                 <FormField
-                    name="receiptFile"
-                    control={form.control}
-                    render={({ field: { onChange, value, ...rest } }) => (
-                        <FormItem>
-                            <FormLabel>Comprovante (PDF, Imagem)</FormLabel>
-                             {purchase?.receiptUrl && (
-                                <div className="text-sm">
-                                    <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                        Ver comprovante atual
-                                    </Link>
-                                </div>
-                            )}
-                            <FormControl>
-                                <Input 
-                                    type="file" 
-                                    accept="image/*,application/pdf"
-                                    onChange={(e) => {
-                                        onChange(e.target.files);
-                                    }}
-                                    {...rest}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
+                 <FormItem>
+                    <FormLabel>Comprovante (PDF, Imagem)</FormLabel>
+                        {purchase?.receiptUrl && (
+                        <div className="text-sm">
+                            <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                Ver comprovante atual
+                            </Link>
+                        </div>
                     )}
-                />
+                    <FormControl>
+                        <Input 
+                            type="file" 
+                            accept="image/*,application/pdf"
+                            {...receiptFileRef}
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+
                  <FormField
                     name="status"
                     control={form.control}
