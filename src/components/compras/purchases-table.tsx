@@ -10,17 +10,18 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Calendar as CalendarIcon, Download, MoreHorizontal, Paperclip, Printer } from "lucide-react"
+import { Calendar as CalendarIcon, Download, MoreHorizontal, Printer } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { NewPurchaseSheet } from "./new-purchase-sheet"
 import { useState } from "react"
 import type { Purchase } from "@/lib/types"
 import { Badge } from "../ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "../ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "../ui/dropdown-menu"
 import type { DateRange } from "react-day-picker"
 import Link from "next/link"
 import { PurchaseReceipt } from "./purchase-receipt"
+import { FilePaperclipIcon } from "../ui/file-paperclip-icon"
 
 interface PurchasesTableProps {
   purchases: Purchase[];
@@ -102,8 +103,8 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
                 <TableCell>
                   {purchase.receiptUrl && (
                     <Button variant="ghost" size="icon" asChild>
-                      <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer">
-                        <Paperclip className="h-4 w-4" />
+                      <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-full w-full">
+                        <FilePaperclipIcon className="h-5 w-5" />
                       </Link>
                     </Button>
                   )}
