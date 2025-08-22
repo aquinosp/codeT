@@ -57,28 +57,37 @@ export function ComprasDashboardClient() {
     async function getPurchasesDashboardData(period: Period) {
       const { start, end } = getPeriodDates(period);
 
-      const purchasesQuery = query(
+      const baseQuery = query(
         collection(db, "purchases"),
         where('paymentDate', '>=', Timestamp.fromDate(start)),
         where('paymentDate', '<=', Timestamp.fromDate(end))
       );
-      
-      const purchasesSnapshot = await getDocs(purchasesQuery);
-      const allPeriodPurchases = purchasesSnapshot.docs.map(doc => ({
+
+      const paidQuery = query(baseQuery, where('status', '==', 'Pago'));
+      const pendingQuery = query(baseQuery, where('status', '==', 'Previsão'));
+
+      const [paidSnapshot, pendingSnapshot] = await Promise.all([
+        getDocs(paidQuery),
+        getDocs(pendingQuery)
+      ]);
+
+      const paidPurchases = paidSnapshot.docs.map(doc => ({
         ...doc.data() as PurchaseDocument,
         id: doc.id,
         paymentDate: (doc.data().paymentDate as Timestamp).toDate(),
       }));
-      
-      const totalPaid = allPeriodPurchases
-        .filter(p => p.status === 'Pago')
-        .reduce((acc, p) => acc + p.total, 0);
 
-      const totalPending = allPeriodPurchases
-        .filter(p => p.status === 'Previsão')
-        .reduce((acc, p) => acc + p.total, 0);
-      
+      const pendingPurchases = pendingSnapshot.docs.map(doc => ({
+        ...doc.data() as PurchaseDocument,
+        id: doc.id,
+        paymentDate: (doc.data().paymentDate as Timestamp).toDate(),
+      }));
 
+      const allPeriodPurchases = [...paidPurchases, ...pendingPurchases];
+      
+      const totalPaid = paidPurchases.reduce((acc, p) => acc + p.total, 0);
+      const totalPending = pendingPurchases.reduce((acc, p) => acc + p.total, 0);
+      
       const expensesByMonth = allPeriodPurchases
         .reduce((acc, p) => {
             const date = new Date(p.paymentDate);
