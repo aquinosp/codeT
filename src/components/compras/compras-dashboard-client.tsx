@@ -1,7 +1,7 @@
 
 'use client';
 
-import { collection, getDocs, query, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { PurchaseDocument } from '@/lib/types';
 import { PurchasesDashboard } from '@/components/compras/purchases-dashboard';
@@ -56,22 +56,20 @@ export function ComprasDashboardClient() {
   useEffect(() => {
     async function getPurchasesDashboardData(period: Period) {
       const { start, end } = getPeriodDates(period);
+
+      const purchasesQuery = query(
+        collection(db, "purchases"),
+        where('paymentDate', '>=', Timestamp.fromDate(start)),
+        where('paymentDate', '<=', Timestamp.fromDate(end))
+      );
       
-      const purchasesQuery = query(collection(db, "purchases"));
       const purchasesSnapshot = await getDocs(purchasesQuery);
-      const allPurchases = purchasesSnapshot.docs.map(doc => ({
+      const allPeriodPurchases = purchasesSnapshot.docs.map(doc => ({
         ...doc.data() as PurchaseDocument,
         id: doc.id,
         paymentDate: (doc.data().paymentDate as Timestamp).toDate(),
       }));
       
-      const allPeriodPurchases = allPurchases.filter(p => {
-        const paymentDate = new Date(p.paymentDate);
-        const isPaidInPeriod = p.status === 'Pago' && paymentDate >= start && paymentDate <= end;
-        const isPendingInPeriod = p.status === 'Previsão' && paymentDate >= start && paymentDate <= end;
-        return isPaidInPeriod || isPendingInPeriod;
-      });
-
       const totalPaid = allPeriodPurchases
         .filter(p => p.status === 'Pago')
         .reduce((acc, p) => acc + p.total, 0);
@@ -135,7 +133,7 @@ export function ComprasDashboardClient() {
     }
 
     setData(null);
-    getPurchasesDashboardData(period).finally(() => console.log('finished'));
+    getPurchasesDashboardData(period);
   }, [period]);
 
   if (!data) {
