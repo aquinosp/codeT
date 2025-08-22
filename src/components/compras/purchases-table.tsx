@@ -10,16 +10,17 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Calendar as CalendarIcon, Download, MoreHorizontal, Paperclip } from "lucide-react"
+import { Calendar as CalendarIcon, Download, MoreHorizontal, Paperclip, Printer } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { NewPurchaseSheet } from "./new-purchase-sheet"
 import { useState } from "react"
 import type { Purchase } from "@/lib/types"
 import { Badge } from "../ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "../ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "../ui/dropdown-menu"
 import type { DateRange } from "react-day-picker"
 import Link from "next/link"
+import { PurchaseReceipt } from "./purchase-receipt"
 
 interface PurchasesTableProps {
   purchases: Purchase[];
@@ -28,10 +29,23 @@ interface PurchasesTableProps {
 
 export function PurchasesTable({ purchases }: PurchasesTableProps) {
   const [dateFilter, setDateFilter] = useState<DateRange | undefined>();
+  const [purchaseToPrint, setPurchaseToPrint] = useState<Purchase | null>(null);
+
+  const handlePrint = (purchase: Purchase) => {
+    setPurchaseToPrint(purchase);
+    setTimeout(() => {
+        window.print();
+        setPurchaseToPrint(null);
+    }, 100);
+  }
 
   const filteredPurchases = purchases.filter(purchase => {
     if (!dateFilter?.from || !dateFilter?.to) return true;
-    return purchase.paymentDate >= dateFilter.from && purchase.paymentDate <= dateFilter.to;
+    const from = new Date(dateFilter.from);
+    from.setHours(0,0,0,0);
+    const to = new Date(dateFilter.to);
+    to.setHours(23,59,59,999);
+    return purchase.paymentDate >= from && purchase.paymentDate <= to;
   })
 
   const getBadgeVariant = (status: Purchase['status']) => {
@@ -46,6 +60,7 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
   }
 
   return (
+    <>
     <div className="space-y-4">
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -70,7 +85,7 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead></TableHead>
+              <TableHead className="w-10"></TableHead>
               <TableHead>Nota Fiscal</TableHead>
               <TableHead>Fornecedor</TableHead>
               <TableHead>Item</TableHead>
@@ -78,7 +93,7 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
               <TableHead>Data Vencimento</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Valor</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="w-10 text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -87,7 +102,7 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
                 <TableCell>
                   {purchase.receiptUrl && (
                     <Button variant="ghost" size="icon" asChild>
-                      <Link href={purchase.receiptUrl} target="_blank">
+                      <Link href={purchase.receiptUrl} target="_blank" rel="noopener noreferrer">
                         <Paperclip className="h-4 w-4" />
                       </Link>
                     </Button>
@@ -115,6 +130,10 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <NewPurchaseSheet isEditing purchase={purchase} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                        <DropdownMenuItem onClick={() => handlePrint(purchase)}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            Imprimir
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                  </TableCell>
@@ -124,5 +143,7 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
         </Table>
       </div>
     </div>
+    {purchaseToPrint && <PurchaseReceipt purchase={purchaseToPrint} />}
+    </>
   )
 }
