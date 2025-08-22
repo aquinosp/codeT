@@ -32,6 +32,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 import Link from "next/link"
+import { Combobox } from "../ui/combobox"
+import { NewPersonSheet } from "../cadastros/new-person-sheet"
 
 const purchaseSchema = z.object({
   supplierId: z.string().min(1, "Fornecedor é obrigatório"),
@@ -137,6 +139,8 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
             if (receiptUrl) {
                 purchaseData.receiptUrl = receiptUrl;
+            } else {
+                delete purchaseData.receiptUrl;
             }
             
             await updateDoc(purchaseRef, purchaseData);
@@ -198,6 +202,10 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
   const title = isEditing ? 'Editar Compra' : 'Registrar Nova Compra';
   const description = isEditing ? 'Atualize os dados da compra.' : 'Preencha os dados da compra para adicionar ao histórico.';
 
+  const supplierOptions = people
+    .filter(p => p.type === 'Fornecedor' || p.type === 'Funcionário')
+    .map(p => ({ value: p.id, label: p.name }));
+
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -215,22 +223,23 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                     name="supplierId"
                     control={form.control}
                     render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Fornecedor / Funcionário</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={isPaid}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecione um fornecedor ou funcionário" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                {people.filter(p => p.type === 'Fornecedor' || p.type === 'Funcionário').map(p => (
-                                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Fornecedor / Funcionário</FormLabel>
+                        <Combobox
+                          options={supplierOptions}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Selecione um fornecedor ou funcionário"
+                          searchPlaceholder="Pesquisar..."
+                          notFoundText={
+                            <div className="flex flex-col items-center text-center p-2">
+                                <p className="text-sm text-muted-foreground">Não encontrado.</p>
+                                <NewPersonSheet trigger={<Button variant="link">Adicionar Pessoa</Button>} />
+                            </div>
+                           }
+                        />
+                        <FormMessage />
+                      </FormItem>
                     )}
                 />
                  <FormField
@@ -338,6 +347,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                             type="file"
                             accept="image/*,application/pdf"
                             {...register("receiptFile")}
+                            ref={receiptFileRef}
                         />
                     </FormControl>
                     <FormMessage>{form.formState.errors.receiptFile?.message?.toString()}</FormMessage>
