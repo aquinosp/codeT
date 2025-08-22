@@ -57,38 +57,31 @@ export function ComprasDashboardClient() {
     async function getPurchasesDashboardData(period: Period) {
       const { start, end } = getPeriodDates(period);
 
-      const baseQuery = query(
+      const allPurchasesQuery = query(
         collection(db, "purchases"),
-        where('paymentDate', '>=', Timestamp.fromDate(start)),
-        where('paymentDate', '<=', Timestamp.fromDate(end))
+        where('status', 'in', ['Pago', 'Previsão'])
       );
-
-      const paidQuery = query(baseQuery, where('status', '==', 'Pago'));
-      const pendingQuery = query(baseQuery, where('status', '==', 'Previsão'));
-
-      const [paidSnapshot, pendingSnapshot] = await Promise.all([
-        getDocs(paidQuery),
-        getDocs(pendingQuery)
-      ]);
-
-      const paidPurchases = paidSnapshot.docs.map(doc => ({
+      
+      const snapshot = await getDocs(allPurchasesQuery);
+      
+      const allPurchases = snapshot.docs.map(doc => ({
         ...doc.data() as PurchaseDocument,
         id: doc.id,
         paymentDate: (doc.data().paymentDate as Timestamp).toDate(),
       }));
 
-      const pendingPurchases = pendingSnapshot.docs.map(doc => ({
-        ...doc.data() as PurchaseDocument,
-        id: doc.id,
-        paymentDate: (doc.data().paymentDate as Timestamp).toDate(),
-      }));
+      const periodPurchases = allPurchases.filter(p => {
+        const paymentDate = p.paymentDate;
+        return paymentDate >= start && paymentDate <= end;
+      });
 
-      const allPeriodPurchases = [...paidPurchases, ...pendingPurchases];
+      const paidPurchases = periodPurchases.filter(p => p.status === 'Pago');
+      const pendingPurchases = periodPurchases.filter(p => p.status === 'Previsão');
       
       const totalPaid = paidPurchases.reduce((acc, p) => acc + p.total, 0);
       const totalPending = pendingPurchases.reduce((acc, p) => acc + p.total, 0);
       
-      const expensesByMonth = allPeriodPurchases
+      const expensesByMonth = periodPurchases
         .reduce((acc, p) => {
             const date = new Date(p.paymentDate);
             const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -113,7 +106,7 @@ export function ComprasDashboardClient() {
         return new Date(a.monthYear).getTime() - new Date(b.monthYear).getTime();
       });
       
-      const expensesByWeek = allPeriodPurchases
+      const expensesByWeek = periodPurchases
         .reduce((acc, p) => {
             const date = new Date(p.paymentDate);
             const weekStart = startOfWeek(date, { locale: ptBR });
