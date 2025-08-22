@@ -113,7 +113,7 @@ export function DashboardClient() {
 
         // Chart Data
         const osStatusData = serviceOrders
-            .filter(o => o.status !== 'Entregue' && o.status !== 'Cancelada' && o.status !== 'Pronta')
+            .filter(o => o.status !== 'Entregue' && o.status !== 'Cancelada')
             .reduce((acc, o) => {
             const status = o.status;
             const existing = acc.find(item => item.status === status);
