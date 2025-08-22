@@ -28,7 +28,7 @@ import { db, storage } from "@/lib/firebase"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { useToast } from "@/hooks/use-toast"
 import { z } from "zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 import Link from "next/link"
@@ -76,8 +76,10 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
   });
 
   const { register } = form;
-
+  
+  const receiptFileWatcher = useWatch({ control: form.control, name: 'receiptFile' });
   const isPaid = isEditing && purchase?.status === 'Pago';
+  const hasNewFile = !!receiptFileWatcher?.[0];
 
   useEffect(() => {
     if (isOpen) {
@@ -348,6 +350,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                             accept="image/*,application/pdf"
                             {...register("receiptFile")}
                             ref={receiptFileRef}
+                            disabled={isSaving}
                         />
                     </FormControl>
                     <FormMessage>{form.formState.errors.receiptFile?.message?.toString()}</FormMessage>
@@ -359,7 +362,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={isPaid}>
                                 <FormControl>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecione o status" />
@@ -378,7 +381,7 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
                 <SheetClose asChild>
                     <Button variant="outline">Cancelar</Button>
                 </SheetClose>
-                <Button type="submit" disabled={isSaving}>
+                <Button type="submit" disabled={isSaving || (isPaid && !hasNewFile)}>
                     {isSaving ? 'Salvando...' : 'Salvar'}
                 </Button>
             </SheetFooter>
