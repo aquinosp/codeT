@@ -139,8 +139,8 @@ export function NewPurchaseSheet({ isEditing = false, purchase, trigger }: NewPu
 
             if (receiptUrl) {
                 purchaseData.receiptUrl = receiptUrl;
-            } else {
-                delete purchaseData.receiptUrl;
+            } else if (purchaseData.receiptUrl !== undefined) {
+                 delete purchaseData.receiptUrl;
             }
             
             await updateDoc(purchaseRef, purchaseData);
