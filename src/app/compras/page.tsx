@@ -107,7 +107,7 @@ function ComprasPage() {
           </h1>
         </div>
         <div className="flex-1 overflow-x-auto">
-          <PurchasesTable purchases={purchases} />
+          <PurchasesTable allPurchases={purchases} />
         </div>
       </div>
     </AppShell>

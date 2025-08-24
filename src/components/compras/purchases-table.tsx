@@ -10,11 +10,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Calendar as CalendarIcon, Download, MoreHorizontal, Printer } from "lucide-react"
+import { Calendar as CalendarIcon, Download, MoreHorizontal, Printer, Search } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { NewPurchaseSheet } from "./new-purchase-sheet"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { Purchase } from "@/lib/types"
 import { Badge } from "../ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "../ui/dropdown-menu"
@@ -22,15 +22,39 @@ import type { DateRange } from "react-day-picker"
 import Link from "next/link"
 import { PurchaseReceipt } from "./purchase-receipt"
 import { FilePaperclipIcon } from "../ui/file-paperclip-icon"
+import { Input } from "../ui/input"
 
 interface PurchasesTableProps {
-  purchases: Purchase[];
+  allPurchases: Purchase[];
 }
 
 
-export function PurchasesTable({ purchases }: PurchasesTableProps) {
+export function PurchasesTable({ allPurchases }: PurchasesTableProps) {
   const [dateFilter, setDateFilter] = useState<DateRange | undefined>();
   const [purchaseToPrint, setPurchaseToPrint] = useState<Purchase | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredPurchases, setFilteredPurchases] = useState<Purchase[]>(allPurchases);
+
+  useEffect(() => {
+    let purchases = [...allPurchases];
+
+    if (dateFilter?.from && dateFilter?.to) {
+      const from = new Date(dateFilter.from);
+      from.setHours(0,0,0,0);
+      const to = new Date(dateFilter.to);
+      to.setHours(23,59,59,999);
+      purchases = purchases.filter(purchase => purchase.paymentDate >= from && purchase.paymentDate <= to);
+    }
+    
+    if (searchTerm) {
+        purchases = purchases.filter(purchase => 
+            purchase.supplier.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+
+    setFilteredPurchases(purchases);
+  }, [dateFilter, searchTerm, allPurchases]);
+
 
   const handlePrint = (purchase: Purchase) => {
     setPurchaseToPrint(purchase);
@@ -39,15 +63,6 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
         setPurchaseToPrint(null);
     }, 100);
   }
-
-  const filteredPurchases = purchases.filter(purchase => {
-    if (!dateFilter?.from || !dateFilter?.to) return true;
-    const from = new Date(dateFilter.from);
-    from.setHours(0,0,0,0);
-    const to = new Date(dateFilter.to);
-    to.setHours(23,59,59,999);
-    return purchase.paymentDate >= from && purchase.paymentDate <= to;
-  })
 
   const getBadgeVariant = (status: Purchase['status']) => {
     switch (status) {
@@ -76,6 +91,15 @@ export function PurchasesTable({ purchases }: PurchasesTableProps) {
                         <Calendar mode="range" selected={dateFilter} onSelect={setDateFilter} />
                     </PopoverContent>
                 </Popover>
+                <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Pesquisar por fornecedor..."
+                        className="pl-8 w-64"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
                  <Button variant="outline" size="icon">
                     <Download className="h-4 w-4" />
                 </Button>
