@@ -51,6 +51,10 @@ const chartConfig: ComponentProps<typeof ChartContainer>["config"] = {
       label: "Aguardando Peças",
       color: "hsl(var(--chart-5))"
     },
+    'Pronta': {
+        label: 'Pronta',
+        color: 'hsl(var(--chart-3))',
+    },
 };
 
 export type Period = 'today' | 'week' | 'month' | 'year';
@@ -271,7 +275,7 @@ export function DashboardCharts({
                       data={osStatusData}
                       dataKey="count"
                       nameKey="name"
-                      innerRadius={60}
+                      innerRadius={40}
                       strokeWidth={5}
                       labelLine={false}
                       label={({
